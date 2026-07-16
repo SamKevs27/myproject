@@ -469,6 +469,11 @@ button:focus-visible {
   padding: 6rem 2.5rem;
 }
 
+.hero,
+.page-section {
+  scroll-margin-top: 68px;
+}
+
 .section-alt {
   background: var(--bg2);
 }

@@ -3,11 +3,19 @@ import { Link } from 'react-router-dom'
 import { useFadeIn } from '../hooks/useFadeIn'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
 
+const SECTION_PATHS = new Set(['/about', '/skills', '/projects', '/experience', '/contact'])
+
+function toSectionLink(to, fallback) {
+  const target = to || fallback
+  return SECTION_PATHS.has(target) ? `/#${target.slice(1)}` : target
+}
+
 export default function About() {
   const { about } = usePortfolioContent()
   const imgRef = useFadeIn()
   const textRef = useFadeIn()
   const statsRef = useFadeIn()
+  const ctaTo = toSectionLink(about.cta?.to, '/contact')
 
   const titleLines = (about.title || '').split('\n')
 
@@ -48,7 +56,7 @@ export default function About() {
               </div>
             ))}
           </div>
-          <Link to={about.cta?.to || '/contact'} className="btn btn-primary">{about.cta?.label || 'Get Started'}</Link>
+          <Link to={ctaTo} className="btn btn-primary">{about.cta?.label || 'Get Started'}</Link>
         </div>
       </div>
     </section>

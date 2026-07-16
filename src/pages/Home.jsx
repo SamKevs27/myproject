@@ -3,9 +3,18 @@ import { Link } from 'react-router-dom'
 import portrait from '../assets/potrait.png'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
 
+const SECTION_PATHS = new Set(['/about', '/skills', '/projects', '/experience', '/contact'])
+
+function toSectionLink(to, fallback) {
+  const target = to || fallback
+  return SECTION_PATHS.has(target) ? `/#${target.slice(1)}` : target
+}
+
 export default function Home() {
   const { home } = usePortfolioContent()
   const tags = home.barTags || []
+  const primaryCtaTo = toSectionLink(home.primaryCta?.to, '/projects')
+  const secondaryCtaTo = toSectionLink(home.secondaryCta?.to, '/contact')
 
   return (
     <section className="hero" id="hero">
@@ -44,8 +53,8 @@ export default function Home() {
           ))}
         </div>
         <div className="hero-bar-ctas">
-          <Link to={home.primaryCta?.to || '/projects'} className="btn btn-primary">{home.primaryCta?.label || 'View Work'}</Link>
-          <Link to={home.secondaryCta?.to || '/contact'} className="btn btn-outline">{home.secondaryCta?.label || 'Contact'}</Link>
+          <Link to={primaryCtaTo} className="btn btn-primary">{home.primaryCta?.label || 'View Work'}</Link>
+          <Link to={secondaryCtaTo} className="btn btn-outline">{home.secondaryCta?.label || 'Contact'}</Link>
         </div>
       </div>
     </section>
