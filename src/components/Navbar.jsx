@@ -2,11 +2,11 @@ import { useState, useRef, useEffect } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 
 const NAV_LINKS = [
-  { label: 'About',      to: '/about' },
-  { label: 'Skills',     to: '/skills' },
-  { label: 'Projects',   to: '/projects' },
+  { label: 'About', to: '/about' },
+  { label: 'Skills', to: '/skills' },
+  { label: 'Projects', to: '/projects' },
   { label: 'Experience', to: '/experience' },
-  { label: 'Contact',    to: '/contact' },
+  { label: 'Contact', to: '/contact' },
 ]
 
 export default function Navbar() {
@@ -18,8 +18,11 @@ export default function Navbar() {
 
   useEffect(() => {
     const idx = NAV_LINKS.findIndex(l => l.to === location.pathname)
-    if (idx < 0) { setInd(i => ({ ...i, opacity: 0 })); return }
     const t = setTimeout(() => {
+      if (idx < 0) {
+        setInd(i => ({ ...i, opacity: 0 }))
+        return
+      }
       const li = itemRefs.current[idx]
       const ul = listRef.current
       if (!li || !ul) return

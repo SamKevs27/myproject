@@ -1,7 +1,8 @@
 import { useFadeIn } from '../hooks/useFadeIn'
-import { EXPERIENCE } from '../data'
+import { usePortfolioContent } from '../context/PortfolioContentContext'
 
 export default function Experience() {
+  const { experience } = usePortfolioContent()
   const headRef = useFadeIn()
   const listRef = useFadeIn()
   return (
@@ -12,8 +13,8 @@ export default function Experience() {
           <h2 className="section-title">Experience</h2>
         </div>
         <div className="exp-list stagger fade-up" ref={listRef}>
-          {EXPERIENCE.map(e => (
-            <div key={e.role} className="exp-item">
+          {experience.map((e, idx) => (
+            <div key={e.id || e.role || idx} className="exp-item">
               <div className="exp-left">
                 <span className="exp-period">{e.period}</span>
               </div>

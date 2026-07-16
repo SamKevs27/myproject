@@ -1,41 +1,51 @@
+import { Fragment } from 'react'
 import { Link } from 'react-router-dom'
 import portrait from '../assets/potrait.png'
+import { usePortfolioContent } from '../context/PortfolioContentContext'
 
 export default function Home() {
+  const { home } = usePortfolioContent()
+  const tags = home.barTags || []
+
   return (
     <section className="hero" id="hero">
       {/* filled name — behind portrait */}
       <div className="hero-name" aria-hidden="true">
-        <span>Samuel</span>
+        <span>{home.heroDisplayName}</span>
       </div>
       {/* outline name — in front of portrait */}
       <div className="hero-name hero-name-outline" aria-hidden="true">
-        <span>Samuel</span>
+        <span>{home.heroDisplayName}</span>
       </div>
 
       {/* portrait */}
       <div className="hero-img-wrap">
-        <img src={portrait} alt="Samuel Kevin Laluyan" className="hero-img" />
+        <img src={portrait} alt={home.portraitAlt} className="hero-img" />
       </div>
 
       {/* top-right label */}
       <div className="hero-label">
         <span className="hero-label-line" />
-        <span>Creative Portfolio</span>
+        <span>{home.topLabel}</span>
       </div>
 
       {/* bottom info bar */}
       <div className="hero-bar">
         <div className="hero-bar-left">
-          <p className="hero-bar-name">Samuel Kevin Laluyan</p>
-          <p className="hero-bar-role">Information Technology Student · Swiss German University</p>
+          <p className="hero-bar-name">{home.barName}</p>
+          <p className="hero-bar-role">{home.barRole}</p>
         </div>
         <div className="hero-bar-dividers">
-          <span>Design</span><span className="bar-sep" /><span>Build</span><span className="bar-sep" /><span>Style</span>
+          {tags.map((tag, idx) => (
+            <Fragment key={`${tag}-${idx}`}>
+              {idx > 0 && <span className="bar-sep" />}
+              <span>{tag}</span>
+            </Fragment>
+          ))}
         </div>
         <div className="hero-bar-ctas">
-          <Link to="/projects" className="btn btn-primary">View Work</Link>
-          <Link to="/contact" className="btn btn-outline">Contact</Link>
+          <Link to={home.primaryCta?.to || '/projects'} className="btn btn-primary">{home.primaryCta?.label || 'View Work'}</Link>
+          <Link to={home.secondaryCta?.to || '/contact'} className="btn btn-outline">{home.secondaryCta?.label || 'Contact'}</Link>
         </div>
       </div>
     </section>

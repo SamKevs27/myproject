@@ -1,18 +1,48 @@
-# React + Vite
+# Portfolio With Firebase CRUD
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This portfolio now supports dynamic content backed by Firebase Firestore.
+Public pages load content from Firestore, and the `/admin` page provides CRUD editing.
 
-Currently, two official plugins are available:
+## 1. Install and run
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+## 2. Configure Firebase
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+Create a `.env` file in project root:
 
-Note: This will impact Vite dev & build performances.
+```bash
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+```
 
-## Expanding the ESLint configuration
+If env vars are missing, the app still runs with fallback local defaults.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 3. Firestore structure
+
+Use these collections/documents:
+
+- `content/home` document (JSON object for home page text/labels)
+- `content/about` document (JSON object for about page text/stats/details)
+- `content/contact` document (JSON object for contact page text/actions; use one primary email CTA plus secondary social links such as WhatsApp, GitHub, LinkedIn, and Instagram)
+- `skills` collection (documents with at least `name`, `pct`, optional `order`)
+- `projects` collection (documents with `num`, `title`, `desc`, `tech[]`, `link`, optional `order`)
+- `experience` collection (documents with `role`, `company`, `period`, `desc`, optional `order`)
+
+## 4. Editing content
+
+- Open `/admin`
+- Use JSON editors for singleton docs: Home, About, Contact
+- Use list editors for Skills, Projects, Experience to create/update/delete items
+
+## 5. Important security note
+
+`/admin` is currently UI-only and has no authentication guard yet.
+Before production, protect writes with Firebase Auth + Firestore security rules.
