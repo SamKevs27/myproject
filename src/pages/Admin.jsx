@@ -127,7 +127,7 @@ function JsonEditor({ title, value, onSave, disabled }) {
 }
 
 function ProjectsEditor({ projects, onCreate, onUpdate, onDelete, disabled }) {
-  const [draft, setDraft] = useState({ num: '', title: '', desc: '', tech: '', link: '#' })
+  const [draft, setDraft] = useState({ num: '', title: '', desc: '', tech: '', link: '' })
 
   return (
     <div className="admin-card">
@@ -174,7 +174,7 @@ function ProjectsEditor({ projects, onCreate, onUpdate, onDelete, disabled }) {
               ...draft,
               tech: draft.tech.split(',').map((item) => item.trim()).filter(Boolean),
             })
-            setDraft({ num: '', title: '', desc: '', tech: '', link: '#' })
+            setDraft({ num: '', title: '', desc: '', tech: '', link: '' })
           }}
         >
           Add Project

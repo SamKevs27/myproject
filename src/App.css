@@ -769,8 +769,12 @@ button:focus-visible {
   justify-self: end;
 }
 
-.proj-item:hover .proj-arrow {
+.proj-item.has-link .proj-arrow,
+.proj-item.has-link:hover .proj-arrow {
   color: var(--accent2);
+}
+
+.proj-item.has-link:hover .proj-arrow {
   transform: translate(3px, -3px);
 }
 
