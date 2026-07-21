@@ -247,26 +247,6 @@ button:focus-visible {
   pointer-events: none;
 }
 
-.navbar-social {
-  display: flex;
-  gap: 1.25rem;
-  flex-shrink: 0;
-  align-items: center;
-}
-
-.navbar-social a {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  transition: color 0.2s, transform 0.2s;
-}
-
-.navbar-social a:hover {
-  color: var(--text);
-  transform: translateY(-2px);
-}
-
 .hamburger {
   display: none;
   flex-direction: column;
@@ -1109,10 +1089,6 @@ button:focus-visible {
   }
 
   .navbar-links {
-    display: none;
-  }
-
-  .navbar-social {
     display: none;
   }
 

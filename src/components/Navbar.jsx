@@ -99,11 +99,6 @@ export default function Navbar() {
           ))}
         </ul>
 
-        <div className="navbar-social">
-          <a href="https://github.com/" target="_blank" rel="noreferrer" aria-label="GitHub">GH</a>
-          <a href="https://linkedin.com/" target="_blank" rel="noreferrer" aria-label="LinkedIn">LI</a>
-          <a href="mailto:samuelkevinlaluyan@email.com" aria-label="Email">✉</a>
-        </div>
         <button className="hamburger" onClick={() => setOpen(o => !o)} aria-label="Menu">
           <span /><span /><span />
         </button>
