@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getAnalytics } from 'firebase/analytics'
-import { getFirestore } from 'firebase/firestore'
+import { initializeFirestore } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -21,26 +21,22 @@ let analytics = null
 
 if (hasFirebaseConfig) {
   const app = initializeApp(firebaseConfig)
-  db = getFirestore(app)
-  if (firebaseConfig.measurementId) {
-    analytics = getAnalytics(app)
-  }
-}
 
-if (hasFirebaseConfig) {
-  const app = initializeApp(firebaseConfig)
-  db = getFirestore(app)
+  db = initializeFirestore(app, {
+    useFetchStreams: false, // disables the persistent long-polling channel
+  })
+
   if (firebaseConfig.measurementId) {
     analytics = getAnalytics(app)
   }
 
-  // 👇 add this part
+  // Quick one-time connection test — safe to remove once you've confirmed it works
   import('firebase/firestore').then(async ({ collection, getDocs }) => {
     try {
       const snap = await getDocs(collection(db, 'your-collection-name'))
-      console.log('✅ Connected to Firestore! Number of toys found:', snap.size)
+      console.log('✅ Connected to Firestore! Number of docs found:', snap.size)
     } catch (err) {
-      console.error('❌ Uh oh, something went wrong:', err.code, err.message)
+      console.error('❌ Firestore error:', err.code, err.message)
     }
   })
 }
