@@ -8,7 +8,7 @@ import { FORMAL_PATH, FUN_PATH, JOURNEY_PATH } from '../lib/routes'
 import { switchView } from '../lib/switchView'
 import DotField from '../components/DotField'
 import { FormalStage, FunStage, JourneyStage } from '../chooser/Stages'
-import Vines from '../chooser/Vines'
+import Twigs from '../chooser/Twigs'
 import { spriteCanvas, spriteDataUrl } from '../journey/renderSprite'
 import { HERO, SAM, characterFrames } from '../journey/sprites/character'
 import { CLOUD } from '../journey/sprites/scenery'
@@ -45,7 +45,8 @@ function FunPreview({ word }) {
     <div className="ch-preview ch-preview-fun" aria-hidden="true">
       <span className="ch-fun-bar ch-fun-bar-a" />
       <span className="ch-fun-bar ch-fun-bar-b" />
-      <p className="ch-fun-word">{word}</p>
+      {/* data-text feeds the cyan/magenta copies that slice during a glitch */}
+      <p className="ch-fun-word" data-text={word}>{word}</p>
     </div>
   )
 }
@@ -227,9 +228,10 @@ export default function ChooserPage() {
             key={view.id}
             ref={(el) => { itemRefs.current[view.id] = el }}
             className={`ch-item${view.id === chosen ? ' is-hidden' : ''}`}
-            style={{ '--float': `${4.6 + i * 1.1}s`, '--delay': `${-i * 1.7}s` }}
+            style={{ '--float': `${2.9 + i * 0.45}s`, '--delay': `${-i * 1.3}s` }}
           >
             <div className="ch-float">
+              {view.id === 'journey' && <Twigs active={hovered === 'journey'} />}
               <a
                 ref={(el) => { cardRefs.current[view.id] = el }}
                 className={`ch-card ch-card-${view.id}`}
@@ -246,7 +248,6 @@ export default function ChooserPage() {
                 aria-label={`${view.title}: ${view.text}`}
               >
                 {view.preview}
-                {view.id === 'journey' && <Vines active={hovered === 'journey'} />}
                 <span className="ch-body">
                   <span className="ch-title">{view.title}</span>
                   <span className="ch-text">{view.text}</span>

@@ -84,19 +84,23 @@ html[data-view='chooser'] body {
   min-width: 0;
 }
 
-/* each card bobs on its own rhythm */
+/* each card drifts on its own rhythm: a soft curve with a slight sway */
 .ch-float {
+  position: relative;
   height: 100%;
-  animation: chFloat var(--float, 5s) ease-in-out var(--delay, 0s) infinite alternate;
+  animation: chFloat var(--float, 3s) ease-in-out var(--delay, 0s) infinite;
 }
 
 @keyframes chFloat {
-  from { transform: translateY(-9px); }
-  to { transform: translateY(9px); }
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(1.5px, -7px) rotate(0.35deg); }
+  50% { transform: translate(0, -3px) rotate(0deg); }
+  75% { transform: translate(-1.5px, -8px) rotate(-0.35deg); }
 }
 
 .ch-card {
   position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -153,50 +157,127 @@ html[data-view='chooser'] body {
   border-color: #6d5a96;
 }
 
-/* ---------- hover: fun glitches ---------- */
+/* ---------- hover: fun glitches like a bad signal ----------
+   Mostly calm, then short irregular bursts: colour copies of the word slice
+   and shift sideways, the card jolts a pixel or two and flickers. */
 .ch-card-fun:hover,
 .ch-card-fun:focus-visible {
   border-color: #ff2bd6;
-  animation: chCardGlitch 1.3s steps(1) infinite;
+  animation: chJolt 2.4s steps(1) infinite;
 }
 
-@keyframes chCardGlitch {
-  0%, 30%, 100% { transform: none; box-shadow: 0 24px 50px -30px rgba(0, 0, 0, 0.8); clip-path: none; }
-  4% { transform: translate(-6px, 2px) skewX(-4deg); box-shadow: -6px 0 0 rgba(46, 242, 255, 0.7), 6px 0 0 rgba(255, 43, 214, 0.7); }
-  8% { transform: translate(5px, -2px); clip-path: inset(10% 0 55% 0); }
-  12% { transform: translate(-3px, 0) skewX(3deg); clip-path: inset(48% 0 12% 0); box-shadow: 4px 0 0 rgba(46, 242, 255, 0.7), -4px 0 0 rgba(255, 43, 214, 0.7); }
-  16% { transform: translate(2px, 1px); clip-path: none; }
+@keyframes chJolt {
+  0%, 6%, 38%, 44%, 71%, 76%, 100% { transform: none; filter: none; }
+  1% { transform: translateX(-2px); filter: brightness(1.15); }
+  3% { transform: translateX(2px); }
+  39% { transform: translateX(1px); filter: brightness(0.9); }
+  72% { transform: translateX(-1px); filter: brightness(1.2) saturate(1.3); }
+  74% { transform: translateX(2px); }
 }
 
-.ch-card-fun:hover .ch-fun-word,
-.ch-card-fun:focus-visible .ch-fun-word {
-  animation: chGlitch 0.45s steps(2) infinite;
+.ch-fun-word {
+  position: relative;
 }
 
-.ch-card-fun:hover .ch-fun-bar,
-.ch-card-fun:focus-visible .ch-fun-bar {
-  animation: chBar 0.45s steps(3) infinite;
-}
-
-@keyframes chGlitch {
-  25% { transform: translate(-5px, 1px) skewX(-8deg); clip-path: inset(0 0 45% 0); }
-  50% { transform: translate(6px, -1px); clip-path: inset(40% 0 0 0); text-shadow: -7px 0 #2ef2ff, 7px 0 #ff2bd6; }
-  75% { transform: translate(-2px, 0) skewX(6deg); clip-path: inset(20% 0 30% 0); }
-}
-
-@keyframes chBar {
-  50% { transform: translateX(30px) scaleX(1.4); }
-}
-
-/* ---------- hover: journey gets wrapped in 8-bit vines ---------- */
-.ch-vines {
+.ch-fun-word::before,
+.ch-fun-word::after {
+  content: attr(data-text);
   position: absolute;
   inset: 0;
-  z-index: 3;
-  width: 100%;
-  height: 100%;
+  opacity: 0;
+  text-shadow: none;
+  pointer-events: none;
+}
+
+.ch-fun-word::before {
+  color: #2ef2ff;
+  mix-blend-mode: screen;
+}
+
+.ch-fun-word::after {
+  color: #ff2bd6;
+  mix-blend-mode: screen;
+}
+
+.ch-card-fun:hover .ch-fun-word::before,
+.ch-card-fun:focus-visible .ch-fun-word::before {
+  animation: chSliceA 2.4s steps(1) infinite;
+}
+
+.ch-card-fun:hover .ch-fun-word::after,
+.ch-card-fun:focus-visible .ch-fun-word::after {
+  animation: chSliceB 2.4s steps(1) infinite;
+}
+
+@keyframes chSliceA {
+  0%, 7%, 37%, 45%, 70%, 77%, 100% { opacity: 0; transform: none; clip-path: inset(0 0 100% 0); }
+  1% { opacity: 1; transform: translateX(-6px); clip-path: inset(12% 0 64% 0); }
+  2% { opacity: 1; transform: translateX(4px); clip-path: inset(58% 0 20% 0); }
+  4% { opacity: 1; transform: translateX(-3px); clip-path: inset(30% 0 44% 0); }
+  38% { opacity: 1; transform: translateX(5px); clip-path: inset(70% 0 8% 0); }
+  41% { opacity: 1; transform: translateX(-2px); clip-path: inset(6% 0 80% 0); }
+  71% { opacity: 1; transform: translateX(-8px); clip-path: inset(40% 0 38% 0); }
+  74% { opacity: 1; transform: translateX(3px); clip-path: inset(18% 0 66% 0); }
+}
+
+@keyframes chSliceB {
+  0%, 7%, 37%, 45%, 70%, 77%, 100% { opacity: 0; transform: none; clip-path: inset(0 0 100% 0); }
+  1% { opacity: 1; transform: translateX(5px); clip-path: inset(62% 0 14% 0); }
+  3% { opacity: 1; transform: translateX(-4px); clip-path: inset(22% 0 60% 0); }
+  5% { opacity: 1; transform: translateX(3px); clip-path: inset(80% 0 4% 0); }
+  39% { opacity: 1; transform: translateX(-6px); clip-path: inset(34% 0 48% 0); }
+  72% { opacity: 1; transform: translateX(7px); clip-path: inset(8% 0 76% 0); }
+  75% { opacity: 1; transform: translateX(-3px); clip-path: inset(52% 0 30% 0); }
+}
+
+/* the glow bars skip during the same bursts */
+.ch-card-fun:hover .ch-fun-bar,
+.ch-card-fun:focus-visible .ch-fun-bar {
+  animation: chBarSkip 2.4s steps(1) infinite;
+}
+
+@keyframes chBarSkip {
+  0%, 6%, 38%, 44%, 71%, 76%, 100% { transform: none; opacity: 1; }
+  1% { transform: translateX(18px); }
+  3% { transform: translateX(-10px); opacity: 0.4; }
+  39% { transform: translateX(8px); }
+  72% { transform: translateX(-22px) scaleX(1.3); }
+}
+
+/* a faint scan band rolls through while hovered */
+.ch-preview-fun::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 18%;
+  top: -20%;
+  background: rgba(253, 244, 255, 0.05);
+  pointer-events: none;
+}
+
+.ch-card-fun:hover .ch-preview-fun::after,
+.ch-card-fun:focus-visible .ch-preview-fun::after {
+  animation: chScan 2.4s linear infinite;
+}
+
+@keyframes chScan {
+  to { top: 110%; }
+}
+
+/* ---------- hover: journey sprouts twigs from behind the card ---------- */
+.ch-twigs {
+  position: absolute;
   pointer-events: none;
   image-rendering: pixelated;
+}
+
+.ch-twigs-back {
+  z-index: 0;
+}
+
+.ch-twigs-front {
+  z-index: 2;
 }
 
 .ch-card-journey:hover,
@@ -660,7 +741,7 @@ html[data-view='chooser'] body {
 .ch-start-fun:hover span,
 .ch-start-fun:focus-visible span {
   display: inline-block;
-  animation: chGlitch 0.4s steps(2) infinite;
+  animation: chJolt 1.6s steps(1) infinite;
 }
 
 /* journey: a chunky 8-bit menu button */
