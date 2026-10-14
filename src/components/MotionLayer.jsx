@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { prefersReducedMotion } from '../hooks/useInView'
+import { spawnBurst } from './burst'
 
-const BURST_SPOKES = 7
 
 // Hovering these starts a one-shot animation that always plays to the end.
-const PLAY_ON_ENTER = '.skills-row, .contact-title, .contact-social-link, .btn-primary'
+const PLAY_ON_ENTER = '.skills-row, .section-title, .contact-social-link, .btn-primary'
 // Hovering these speeds up their looping drawings.
 const SPEED_ON_HOVER = '.pc'
 
@@ -29,22 +29,6 @@ function setLoopSpeed(el, rate) {
   for (const a of el.getAnimations({ subtree: true })) {
     if (a.effect?.getTiming().iterations === Infinity) a.updatePlaybackRate(rate)
   }
-}
-
-// A little splash of joints and bones wherever someone clicks.
-function spawnBurst(x, y) {
-  const burst = document.createElement('div')
-  burst.className = 'click-burst'
-  burst.style.left = `${x}px`
-  burst.style.top = `${y}px`
-  for (let i = 0; i < BURST_SPOKES; i++) {
-    const spoke = document.createElement('span')
-    spoke.style.setProperty('--a', `${(360 / BURST_SPOKES) * i + Math.random() * 20}deg`)
-    spoke.style.setProperty('--d', `${26 + Math.random() * 22}px`)
-    burst.appendChild(spoke)
-  }
-  document.body.appendChild(burst)
-  setTimeout(() => burst.remove(), 800)
 }
 
 /**

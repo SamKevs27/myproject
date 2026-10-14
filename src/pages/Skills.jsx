@@ -2,6 +2,7 @@ import { usePortfolioContent } from '../context/PortfolioContentContext'
 import StretchText from '../components/StretchText'
 import { useInView } from '../hooks/useInView'
 import SectionBackground from '../components/SectionBackground'
+import ScrambleText from '../components/ScrambleText'
 
 export default function Skills() {
   const { skillsPage } = usePortfolioContent()
@@ -13,7 +14,7 @@ export default function Skills() {
       <SectionBackground variant="codeField" />
       <div className="section-inner skills-layout">
         <div className="skills-intro">
-          {page.sectionLabel && <span className="section-label">{page.sectionLabel}</span>}
+          {page.sectionLabel && <ScrambleText className="section-label" text={page.sectionLabel} />}
           <StretchText as="h2" className="section-title" text={page.title || ''} />
           {page.subtitle && <p className="skills-sub">{page.subtitle}</p>}
         </div>

@@ -4,7 +4,7 @@
   font-weight: 400;
   color-scheme: dark;
   color: #ffffff;
-  background-color: #100d17;
+  background-color: #0c0614;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -20,7 +20,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #100d17;
+  background: #0c0614;
 }
 
 h1, h2, h3, h4, h5, h6 {

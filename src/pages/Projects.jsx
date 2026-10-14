@@ -41,7 +41,7 @@ function ProjectCard({ project, featured, index }) {
   const external = hasLink && /^https?:/i.test(project.link)
 
   return (
-    <article className={`pc${featured ? ' pc-featured' : ''}${hasLink ? ' has-link' : ''}`} style={{ '--i': index }}>
+    <article className={`pc${featured ? ' pc-featured' : ''}${hasLink ? ' has-link' : ''}`} data-cat={category.key} style={{ '--i': index }}>
       <div className="pc-art">
         {project.image
           ? <img src={project.image} alt={`${title} screenshot`} className="pc-thumb" loading="lazy" />
@@ -96,7 +96,7 @@ export default function Projects() {
             All <span>{projects.length}</span>
           </button>
           {CATEGORIES.filter((c) => counts[c.key]).map((c) => (
-            <button key={c.key} type="button" className={filter === c.key ? 'is-active' : ''} aria-pressed={filter === c.key} onClick={() => setFilter(c.key)}>
+            <button key={c.key} type="button" data-cat={c.key} className={filter === c.key ? 'is-active' : ''} aria-pressed={filter === c.key} onClick={() => setFilter(c.key)}>
               {c.label} <span>{counts[c.key]}</span>
             </button>
           ))}

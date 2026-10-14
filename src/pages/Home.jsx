@@ -86,6 +86,9 @@ export default function Home() {
   return (
     <section className="hero" id="hero" ref={heroRef}>
       <HeroBackground heroRef={heroRef} />
+      {/* decorative neon signs: "Samuel" and "engineer" in katakana */}
+      <span className="neon-sign neon-sign-name" aria-hidden="true">サミュエル</span>
+      <span className="neon-sign neon-sign-role" aria-hidden="true">エンジニア</span>
       {/* the giant name below is decorative (aria-hidden), so this is the real page heading */}
       <h1 className="sr-only">{[home.barName, home.barRole].filter(Boolean).join(' — ')}</h1>
       <div className="hero-name" aria-hidden="true">

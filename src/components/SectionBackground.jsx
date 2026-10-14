@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { prefersReducedMotion } from '../hooks/useInView'
+import { COLORS, rgba } from '../theme'
 
 const TAU = Math.PI * 2
 const rand = (a = 0, b = 1) => a + Math.random() * (b - a)
@@ -51,7 +52,7 @@ function network(ctx) {
         }
       }
       levels.forEach((list, k) => {
-        ctx.strokeStyle = `rgba(150, 110, 250, ${0.05 + k * 0.06})`
+        ctx.strokeStyle = rgba(COLORS.violet, 0.07 + k * 0.07)
         ctx.lineWidth = 1
         ctx.beginPath()
         for (let i = 0; i < list.length; i += 2) {
@@ -64,7 +65,7 @@ function network(ctx) {
         for (const n of nodes) {
           const d = Math.hypot(n.x - p.x, n.y - p.y)
           if (d < 200) {
-            ctx.strokeStyle = `rgba(214, 199, 255, ${(1 - d / 200) * 0.5})`
+            ctx.strokeStyle = rgba(COLORS.pink, (1 - d / 200) * 0.6)
             ctx.beginPath()
             ctx.moveTo(p.x, p.y)
             ctx.lineTo(n.x, n.y)
@@ -72,7 +73,7 @@ function network(ctx) {
           }
         }
       }
-      ctx.fillStyle = 'rgba(214, 199, 255, 0.55)'
+      ctx.fillStyle = rgba(COLORS.cyan, 0.6)
       ctx.beginPath()
       for (const n of nodes) {
         ctx.moveTo(n.x + 1.8, n.y)
@@ -111,7 +112,8 @@ function codeField(ctx) {
       ctx.font = '600 13px "Instrument Sans", system-ui, sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      const buckets = Array.from({ length: 6 }, () => [])
+      const wave = Array.from({ length: 6 }, () => [])
+      const touched = Array.from({ length: 6 }, () => [])
       for (const c of cells) {
         if (p.active) {
           const d = Math.hypot(c.x - p.x, c.y - p.y)
@@ -121,14 +123,17 @@ function codeField(ctx) {
           }
         }
         c.glow *= 0.92
-        const wave = Math.max(0, Math.sin((c.x + c.y) * 0.004 - t * 1.1) - 0.9) * 10
-        const level = Math.max(c.glow, wave * 0.45)
-        buckets[Math.min(5, Math.floor(level * 6))].push(c)
+        const sweep = Math.max(0, Math.sin((c.x + c.y) * 0.004 - t * 1.1) - 0.9) * 4.5
+        if (c.glow > sweep) touched[Math.min(5, Math.floor(c.glow * 6))].push(c)
+        else wave[Math.min(5, Math.floor(sweep * 6))].push(c)
       }
-      buckets.forEach((list, k) => {
-        ctx.fillStyle = k === 0 ? 'rgba(150, 110, 250, 0.07)' : `rgba(214, 199, 255, ${0.08 + k * 0.1})`
+      // resting symbols are violet, the passing wave cyan, the cursor pink
+      const paint = (buckets, color) => buckets.forEach((list, k) => {
+        ctx.fillStyle = k === 0 ? rgba(COLORS.violet, 0.09) : rgba(color, 0.1 + k * 0.11)
         for (const c of list) ctx.fillText(c.ch, c.x, c.y)
       })
+      paint(wave, COLORS.cyan)
+      paint(touched, COLORS.pink)
     },
   }
 }
@@ -145,7 +150,7 @@ function blueprint(ctx) {
       ctx.clearRect(0, 0, w, h)
       const off = (t * 8) % (CELL * 4)
       for (const major of [false, true]) {
-        ctx.strokeStyle = major ? 'rgba(150, 110, 250, 0.1)' : 'rgba(150, 110, 250, 0.045)'
+        ctx.strokeStyle = major ? rgba(COLORS.cyan, 0.1) : rgba(COLORS.cyan, 0.04)
         ctx.lineWidth = 1
         ctx.beginPath()
         let i = 0
@@ -165,15 +170,15 @@ function blueprint(ctx) {
       // scan line sweeping down every 7 s
       const sy = ((t % 7) / 7) * (h + 240) - 120
       const band = ctx.createLinearGradient(0, sy - 120, 0, sy)
-      band.addColorStop(0, 'rgba(139, 92, 246, 0)')
-      band.addColorStop(1, 'rgba(139, 92, 246, 0.08)')
+      band.addColorStop(0, rgba(COLORS.cyan, 0))
+      band.addColorStop(1, rgba(COLORS.cyan, 0.08))
       ctx.fillStyle = band
       ctx.fillRect(0, sy - 120, w, 120)
-      ctx.fillStyle = 'rgba(183, 156, 255, 0.35)'
+      ctx.fillStyle = rgba(COLORS.cyan, 0.4)
       ctx.fillRect(0, sy, w, 1)
 
       if (p.active) {
-        ctx.strokeStyle = 'rgba(183, 156, 255, 0.22)'
+        ctx.strokeStyle = rgba(COLORS.pink, 0.28)
         ctx.setLineDash([4, 6])
         ctx.beginPath()
         ctx.moveTo(0, p.y + 0.5)
@@ -182,14 +187,14 @@ function blueprint(ctx) {
         ctx.lineTo(p.x + 0.5, h)
         ctx.stroke()
         ctx.setLineDash([])
-        ctx.strokeStyle = 'rgba(214, 199, 255, 0.6)'
+        ctx.strokeStyle = rgba(COLORS.pink, 0.75)
         ctx.beginPath()
         ctx.arc(p.x, p.y, 16, 0, TAU)
         ctx.stroke()
         ctx.font = '500 11px "Instrument Sans", system-ui, sans-serif'
         ctx.textAlign = 'left'
         ctx.textBaseline = 'alphabetic'
-        ctx.fillStyle = 'rgba(214, 199, 255, 0.7)'
+        ctx.fillStyle = rgba(COLORS.pink, 0.85)
         ctx.fillText(`${Math.round(p.x)}, ${Math.round(p.y)}`, p.x + 22, p.y - 12)
       }
     },
@@ -207,6 +212,7 @@ function stream(ctx) {
     s.y = anywhere ? rand(0, h) : h + rand(0, 80)
     s.speed = rand(0.25, 1.3)
     s.len = rand(20, 80)
+    s.pink = Math.random() < 0.3
   }
   return {
     resize(W, H) {
@@ -224,6 +230,7 @@ function stream(ctx) {
     frame(t, p) {
       ctx.clearRect(0, 0, w, h)
       const dim = []
+      const dimPink = []
       const bright = []
       for (const s of streaks) {
         let boost = 1
@@ -232,7 +239,8 @@ function stream(ctx) {
         }
         s.y -= s.speed * boost
         if (s.y + s.len < 0) reset(s, false)
-        ;(boost > 2 ? bright : dim).push(s)
+        if (boost > 2) bright.push(s)
+        else (s.pink ? dimPink : dim).push(s)
       }
       const strokeAll = (list, color, width) => {
         ctx.strokeStyle = color
@@ -245,11 +253,12 @@ function stream(ctx) {
         ctx.stroke()
       }
       ctx.lineCap = 'round'
-      strokeAll(dim, 'rgba(150, 110, 250, 0.16)', 1)
-      strokeAll(bright, 'rgba(214, 199, 255, 0.6)', 1.5)
-      ctx.fillStyle = 'rgba(214, 199, 255, 0.5)'
+      strokeAll(dim, rgba(COLORS.violet, 0.22), 1)
+      strokeAll(dimPink, rgba(COLORS.pink, 0.18), 1)
+      strokeAll(bright, rgba(COLORS.cyan, 0.7), 1.5)
+      ctx.fillStyle = rgba(COLORS.white, 0.5)
       ctx.beginPath()
-      for (const s of [...dim, ...bright]) {
+      for (const s of [...dim, ...dimPink, ...bright]) {
         ctx.moveTo(s.x + 1.4, s.y)
         ctx.arc(s.x, s.y, 1.4, 0, TAU)
       }
@@ -266,26 +275,28 @@ function signal(ctx) {
   let rings = []
   let lastEmit = 0
   let lastSmall = 0
+  let emitted = 0
   const source = () => (w < 700 ? [w * 0.5, h * 0.92] : [w * 0.78, h * 0.5])
   return {
     resize(W, H) { w = W; h = H },
-    down(x, y) { rings.push({ x, y, r: 0, max: Math.max(w, h) * 0.6, speed: 4, alpha: 0.6 }) },
+    down(x, y) { rings.push({ x, y, r: 0, max: Math.max(w, h) * 0.6, speed: 4, alpha: 0.7, color: COLORS.pink }) },
     frame(t, p) {
       ctx.clearRect(0, 0, w, h)
       const [sx, sy] = source()
       if (t - lastEmit > 1.4) {
         lastEmit = t
-        rings.push({ x: sx, y: sy, r: 0, max: Math.hypot(w, h) * 0.75, speed: 1.6, alpha: 0.28 })
+        emitted++
+        rings.push({ x: sx, y: sy, r: 0, max: Math.hypot(w, h) * 0.75, speed: 1.6, alpha: 0.32, color: emitted % 2 ? COLORS.cyan : COLORS.violet })
       }
       if (p.active && p.moved && t - lastSmall > 0.22) {
         lastSmall = t
-        rings.push({ x: p.x, y: p.y, r: 0, max: 160, speed: 2.2, alpha: 0.5 })
+        rings.push({ x: p.x, y: p.y, r: 0, max: 160, speed: 2.2, alpha: 0.55, color: COLORS.pink })
       }
       ctx.lineWidth = 1.2
       for (const ring of rings) {
         ring.r += ring.speed
         const life = 1 - ring.r / ring.max
-        ctx.strokeStyle = `rgba(183, 156, 255, ${Math.max(0, life) * ring.alpha})`
+        ctx.strokeStyle = rgba(ring.color, Math.max(0, life) * ring.alpha)
         ctx.beginPath()
         ctx.arc(ring.x, ring.y, ring.r, 0, TAU)
         ctx.stroke()
@@ -293,11 +304,11 @@ function signal(ctx) {
       rings = rings.filter((ring) => ring.r < ring.max)
       // the transmitter
       const pulse = 0.5 + 0.5 * Math.sin(t * 4)
-      ctx.fillStyle = `rgba(139, 92, 246, ${0.25 + pulse * 0.25})`
+      ctx.fillStyle = rgba(COLORS.pink, 0.25 + pulse * 0.25)
       ctx.beginPath()
       ctx.arc(sx, sy, 10 + pulse * 6, 0, TAU)
       ctx.fill()
-      ctx.fillStyle = 'rgba(243, 240, 249, 0.9)'
+      ctx.fillStyle = rgba(COLORS.white, 0.9)
       ctx.beginPath()
       ctx.arc(sx, sy, 3.5, 0, TAU)
       ctx.fill()

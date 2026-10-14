@@ -3,6 +3,7 @@ import { usePortfolioContent } from '../context/PortfolioContentContext'
 import StretchText from '../components/StretchText'
 import { useInView } from '../hooks/useInView'
 import SectionBackground from '../components/SectionBackground'
+import ScrambleText from '../components/ScrambleText'
 
 function isExternalLink(href = '') {
   return /^https?:\/\//i.test(href)
@@ -107,7 +108,7 @@ export default function Contact() {
     <section className="section page-section" id="contact">
       <SectionBackground variant="signal" />
       <div className="section-inner contact-inner">
-        <span className="section-label">{contact.sectionLabel}</span>
+        <ScrambleText className="section-label" text={contact.sectionLabel || ''} />
         <StretchText as="h2" className="section-title contact-title" text={contact.title || ''} />
         <p className="contact-sub">{contact.subtitle}</p>
         {email && <EmailCopy email={email} />}

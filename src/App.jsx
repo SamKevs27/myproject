@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-ro
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import MotionLayer from './components/MotionLayer'
+import GlitchOverlay from './components/GlitchOverlay'
 import HomePage from './pages/HomePage'
 import { PortfolioContentProvider } from './context/PortfolioContentContext'
 import './App.css'
@@ -64,6 +65,7 @@ function AppShell() {
     <div className="app-shell">
       <ScrollToHash />
       <MotionLayer />
+      <GlitchOverlay />
       <Navbar />
       <main className="app-main">
         {/* key change re-mounts the div, re-triggering the CSS enter animation */}

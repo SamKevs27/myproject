@@ -2,6 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
 import { ADMIN_EMAIL, isAdminUser, signInWithGoogle, signOutAdmin, useAuthUser } from '../firebase/auth'
 import { RECOMMENDED_UPDATES } from './admin/recommendedUpdates'
+import StretchText from '../components/StretchText'
+import ScrambleText from '../components/ScrambleText'
+import SectionBackground from '../components/SectionBackground'
+import { spawnBurst } from '../components/burst'
+import { prefersReducedMotion } from '../hooks/useInView'
 
 const SECTION_TARGETS = [
   { value: '/about', label: 'About section' },
@@ -273,6 +278,19 @@ function ButtonEditor({ label, value = {}, onChange }) {
 }
 
 function SaveBar({ dirty, disabled, status, onSave, onDiscard, saveLabel = 'Save changes' }) {
+  const saveRef = useRef(null)
+
+  // A successful save throws a few neon sparks off the Save button.
+  useEffect(() => {
+    const btn = saveRef.current
+    if (status !== 'saved' || !btn || prefersReducedMotion()) return undefined
+    const r = btn.getBoundingClientRect()
+    const timers = [0, 120, 240].map((delay, i) => setTimeout(() => {
+      spawnBurst(r.left + r.width * (0.3 + i * 0.2), r.top + r.height / 2)
+    }, delay))
+    return () => timers.forEach(clearTimeout)
+  }, [status])
+
   let message = 'All changes saved'
   if (status === 'saved') message = 'Saved ✓'
   else if (status === 'error') message = 'Could not save — see error above'
@@ -285,7 +303,7 @@ function SaveBar({ dirty, disabled, status, onSave, onDiscard, saveLabel = 'Save
         {onDiscard && (
           <button type="button" className="btn btn-outline" onClick={onDiscard} disabled={!dirty || disabled}>Discard</button>
         )}
-        <button type="button" className="btn btn-primary" onClick={onSave} disabled={!dirty || disabled}>{saveLabel}</button>
+        <button ref={saveRef} type="button" className="btn btn-primary" onClick={onSave} disabled={!dirty || disabled}>{saveLabel}</button>
       </div>
     </div>
   )
@@ -728,9 +746,11 @@ function RecommendedUpdatesBanner({ content, api, disabled, onApplied }) {
 function SignInScreen({ user, onSignIn, error }) {
   return (
     <section className="section page-section" id="admin">
+      <SectionBackground variant="blueprint" />
+      <span className="neon-sign admin-neon" aria-hidden="true">アクセス</span>
       <div className="section-inner admin-inner admin-signin">
-        <span className="section-label">Content Manager</span>
-        <h2 className="section-title admin-title">Sign in to edit</h2>
+        <ScrambleText className="section-label" text="Content Manager" />
+        <StretchText as="h2" className="section-title admin-title" text="Sign in to edit" />
         {user ? (
           <>
             <p className="admin-panel-desc">
@@ -886,8 +906,8 @@ function AdminEditor({ user }) {
       <div className="section-inner admin-inner">
         <header className="admin-header">
           <div>
-            <span className="section-label">Content Manager</span>
-            <h2 className="section-title admin-title">Edit your site</h2>
+            <ScrambleText className="section-label" text="Content Manager" />
+            <StretchText as="h2" className="section-title admin-title" text="Edit your site" />
           </div>
           <div className="admin-account">
             <span className={`admin-sync${saving ? ' is-saving' : ''}`}>

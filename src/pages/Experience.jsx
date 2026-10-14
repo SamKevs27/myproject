@@ -2,6 +2,7 @@ import { usePortfolioContent } from '../context/PortfolioContentContext'
 import StretchText from '../components/StretchText'
 import { useInView } from '../hooks/useInView'
 import SectionBackground from '../components/SectionBackground'
+import ScrambleText from '../components/ScrambleText'
 
 function ExpDescription({ text = '' }) {
   const lines = text.split('\n').map((line) => line.replace(/^[-•*]\s*/, '').trim()).filter(Boolean)
@@ -20,7 +21,7 @@ function ExpGroup({ title, items }) {
 
   return (
     <div ref={ref} className={`exp-group${inView ? ' is-in' : ''}`}>
-      {title && <h3 className="exp-group-title">{title}</h3>}
+      {title && <ScrambleText as="h3" className="exp-group-title" text={title} />}
       <div className="exp-list">
         {items.map((e, idx) => (
           <div key={e.id || e.role || idx} className="exp-item" style={{ '--i': idx }}>

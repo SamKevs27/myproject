@@ -7,6 +7,7 @@ import StretchText from '../components/StretchText'
 import CountUp from '../components/CountUp'
 import { prefersReducedMotion, useInView } from '../hooks/useInView'
 import SectionBackground from '../components/SectionBackground'
+import ScrambleText from '../components/ScrambleText'
 
 const SECTION_PATHS = new Set(['/about', '/skills', '/projects', '/experience', '/contact'])
 
@@ -61,7 +62,7 @@ export default function About() {
           <Link to="/#projects" className="pose-note">This is how my thesis sees dancers</Link>
         </div>
         <div ref={textRef} className={`about-text-col rise-group${textInView ? ' is-in' : ''}`}>
-          <span className="section-label">{about.sectionLabel}</span>
+          <ScrambleText className="section-label" text={about.sectionLabel || ''} />
           <StretchText as="h2" className="section-title" text={about.title || ''} />
           {(about.paragraphs || []).map((paragraph, idx) => (
             <p key={`${idx}-${paragraph.slice(0, 20)}`} className="about-p rise" style={{ '--i': idx + 1 }}>{paragraph}</p>

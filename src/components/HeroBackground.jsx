@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { prefersReducedMotion } from '../hooks/useInView'
+import { COLORS, mix, rgba } from '../theme'
 
 const COLS = 64 // vertices across
 const ROWS = 30 // vertices from near to far
@@ -54,7 +55,8 @@ export default function HeroBackground({ heroRef }) {
     const wz = new Float32Array(n)
     const sx = new Float32Array(n)
     const sy = new Float32Array(n)
-    const glow = new Float32Array(n)
+    const glow = new Float32Array(n) // lit wave crests
+    const lift = new Float32Array(n) // water raised by the cursor
     for (let r = 0; r < ROWS; r++) {
       const z = Z_NEAR + ((Z_FAR - Z_NEAR) * r) / (ROWS - 1)
       for (let c = 0; c < COLS; c++) {
@@ -100,14 +102,15 @@ export default function HeroBackground({ heroRef }) {
           if (band < 0.6) y += Math.cos((band / 0.6) * (Math.PI / 2)) * 0.32 * rp.life
         }
         project(i, y, focal, horizonY)
-        let g = Math.max(0, (y - CREST) / 0.15)
+        const g = Math.max(0, (y - CREST) / 0.15)
+        lift[i] = 0
         if (cursor.strength > 0.01) {
           const d = Math.hypot(sx[i] - cursor.x, sy[i] - cursor.y)
           if (d < CURSOR_REACH) {
             const k = (1 - d / CURSOR_REACH) ** 2 * cursor.strength
             y += k * 0.45
             project(i, y, focal, horizonY)
-            g = Math.max(g, k * 1.4)
+            lift[i] = Math.min(1, k * 1.4)
           }
         }
         glow[i] = Math.min(1, g)
@@ -121,8 +124,9 @@ export default function HeroBackground({ heroRef }) {
       // far rows first; depth fades both lines and dots
       for (let r = ROWS - 1; r >= 0; r--) {
         const depth = 1 - r / (ROWS - 1)
-        const lineAlpha = 0.05 + depth * 0.28
-        ctx.strokeStyle = `rgba(150, 110, 250, ${lineAlpha})`
+        const lineAlpha = 0.06 + depth * 0.3
+        // violet far away, shading toward cyan up close
+        ctx.strokeStyle = rgba(mix(COLORS.violet, COLORS.cyan, depth * 0.55), lineAlpha)
         ctx.lineWidth = 0.5 + depth * 0.7
         ctx.beginPath()
         for (let c = 0; c < COLS; c++) {
@@ -136,7 +140,7 @@ export default function HeroBackground({ heroRef }) {
         }
         ctx.stroke()
 
-        ctx.fillStyle = `rgba(214, 199, 255, ${0.15 + depth * 0.6})`
+        ctx.fillStyle = rgba(mix(COLORS.lavender, COLORS.cyan, depth * 0.6), 0.15 + depth * 0.6)
         ctx.beginPath()
         const radius = 0.6 + depth * 1.3
         for (let c = 0; c < COLS; c++) {
@@ -147,27 +151,31 @@ export default function HeroBackground({ heroRef }) {
         ctx.fill()
       }
 
-      // lit crests and the water lifted by the cursor
-      ctx.strokeStyle = 'rgba(214, 199, 255, 0.55)'
-      ctx.lineWidth = 1.1
-      ctx.beginPath()
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS - 1; c++) {
-          const i = r * COLS + c
-          if (glow[i] > 0.35 && glow[i + 1] > 0.35) { ctx.moveTo(sx[i], sy[i]); ctx.lineTo(sx[i + 1], sy[i + 1]) }
-          if (r > 0 && glow[i] > 0.35 && glow[i - COLS] > 0.35) { ctx.moveTo(sx[i], sy[i]); ctx.lineTo(sx[i - COLS], sy[i - COLS]) }
+      // lit crests in cyan, water lifted by the cursor in pink
+      const highlight = (values, color) => {
+        ctx.strokeStyle = rgba(color, 0.6)
+        ctx.lineWidth = 1.1
+        ctx.beginPath()
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS - 1; c++) {
+            const i = r * COLS + c
+            if (values[i] > 0.35 && values[i + 1] > 0.35) { ctx.moveTo(sx[i], sy[i]); ctx.lineTo(sx[i + 1], sy[i + 1]) }
+            if (r > 0 && values[i] > 0.35 && values[i - COLS] > 0.35) { ctx.moveTo(sx[i], sy[i]); ctx.lineTo(sx[i - COLS], sy[i - COLS]) }
+          }
         }
+        ctx.stroke()
+        ctx.fillStyle = rgba(mix(color, COLORS.white, 0.5), 0.95)
+        ctx.beginPath()
+        for (let i = 0; i < n; i++) {
+          if (values[i] < 0.35) continue
+          const radius = 1.2 + values[i] * 1.6 * (1 - Math.floor(i / COLS) / ROWS)
+          ctx.moveTo(sx[i] + radius, sy[i])
+          ctx.arc(sx[i], sy[i], radius, 0, Math.PI * 2)
+        }
+        ctx.fill()
       }
-      ctx.stroke()
-      ctx.fillStyle = 'rgba(243, 240, 249, 0.95)'
-      ctx.beginPath()
-      for (let i = 0; i < n; i++) {
-        if (glow[i] < 0.35) continue
-        const radius = 1.2 + glow[i] * 1.6 * (1 - Math.floor(i / COLS) / ROWS)
-        ctx.moveTo(sx[i] + radius, sy[i])
-        ctx.arc(sx[i], sy[i], radius, 0, Math.PI * 2)
-      }
-      ctx.fill()
+      highlight(glow, COLORS.cyan)
+      highlight(lift, COLORS.pink)
     }
 
     const frame = (now) => {
