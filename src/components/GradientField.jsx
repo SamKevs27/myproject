@@ -1,18 +1,19 @@
 import { useEffect, useRef } from 'react'
 import { prefersReducedMotion } from '../hooks/useInView'
+import './GradientField.css'
 
 const SCALE = 10 // the canvas is 1/10th of the screen; stretching it blurs the blobs together
-const BASE = '#c4c4c4'
+const BASE = '#9c9c9c'
 
 // Soft monochrome blobs, each drifting on its own loop. The first is the big
 // dark circle that roams the whole screen; the rest are white and greys.
 // [r, g, b], radius (share of the longer screen side), path centre, path size, speeds, phase, alpha
 const BLOBS = [
-  { c: [18, 18, 18], r: 0.42, cx: 0.5, cy: 0.5, ax: 0.38, ay: 0.32, sx: 0.23, sy: 0.31, p: 0, a: 0.9 }, // the big dark circle
-  { c: [255, 255, 255], r: 0.5, cx: 0.15, cy: 0.2, ax: 0.14, ay: 0.12, sx: 0.18, sy: 0.14, p: 1.7, a: 0.95 },
-  { c: [235, 235, 235], r: 0.55, cx: 0.85, cy: 0.8, ax: 0.14, ay: 0.12, sx: 0.15, sy: 0.21, p: 3.1, a: 0.9 },
-  { c: [120, 120, 120], r: 0.4, cx: 0.8, cy: 0.15, ax: 0.12, ay: 0.14, sx: 0.24, sy: 0.17, p: 4.4, a: 0.7 },
-  { c: [255, 255, 255], r: 0.35, cx: 0.4, cy: 0.9, ax: 0.2, ay: 0.08, sx: 0.2, sy: 0.16, p: 2.4, a: 0.8 },
+  { c: [0, 0, 0], r: 0.42, cx: 0.5, cy: 0.5, ax: 0.38, ay: 0.32, sx: 0.23, sy: 0.31, p: 0, a: 1 }, // the big dark circle
+  { c: [255, 255, 255], r: 0.5, cx: 0.15, cy: 0.2, ax: 0.14, ay: 0.12, sx: 0.18, sy: 0.14, p: 1.7, a: 1 },
+  { c: [255, 255, 255], r: 0.55, cx: 0.85, cy: 0.8, ax: 0.14, ay: 0.12, sx: 0.15, sy: 0.21, p: 3.1, a: 1 },
+  { c: [40, 40, 40], r: 0.4, cx: 0.8, cy: 0.15, ax: 0.12, ay: 0.14, sx: 0.24, sy: 0.17, p: 4.4, a: 0.85 },
+  { c: [255, 255, 255], r: 0.35, cx: 0.4, cy: 0.9, ax: 0.2, ay: 0.08, sx: 0.2, sy: 0.16, p: 2.4, a: 1 },
 ]
 
 /**
@@ -59,7 +60,7 @@ export default function GradientField({ className = '' }) {
         const g = ctx.createRadialGradient(x, y, 0, x, y, r)
         const [cr, cg, cb] = b.c
         g.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, ${b.a})`)
-        g.addColorStop(0.6, `rgba(${cr}, ${cg}, ${cb}, ${b.a * 0.5})`)
+        g.addColorStop(0.55, `rgba(${cr}, ${cg}, ${cb}, ${b.a * 0.75})`)
         g.addColorStop(1, `rgba(${cr}, ${cg}, ${cb}, 0)`)
         ctx.fillStyle = g
         ctx.fillRect(0, 0, w, h)

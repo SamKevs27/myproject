@@ -3940,3 +3940,54 @@ html[data-view='formal'] body {
     background: var(--text);
   }
 }
+
+/* ===== MAIN-MENU GRADIENT BEHIND THE SITE =====
+   The menu's moving monochrome gradient sits at the very back of the fun and
+   formal views. Page surfaces turn see-through so it drifts behind them; a
+   veil in each view's own colour keeps the text readable. */
+.app-shell {
+  isolation: isolate;
+  background: transparent;
+  --gradient-veil: rgba(12, 6, 20, 0.84);
+}
+
+.app-shell .hero {
+  background:
+    radial-gradient(ellipse 55% 50% at 50% 42%, rgba(192, 64, 255, 0.16), transparent 70%),
+    radial-gradient(ellipse 40% 35% at 85% 20%, rgba(233, 166, 255, 0.07), transparent 70%);
+}
+
+.app-shell .hero::before {
+  background:
+    radial-gradient(ellipse 75% 85% at 50% 45%, transparent 38%, rgba(12, 6, 20, 0.45) 100%),
+    linear-gradient(to bottom, transparent 55%, rgba(12, 6, 20, 0.6) 90%);
+}
+
+.app-shell .section-alt {
+  background: rgba(21, 10, 34, 0.45);
+}
+
+.app-shell .footer {
+  background: rgba(21, 10, 34, 0.6);
+}
+
+.view-formal {
+  --gradient-veil: rgba(255, 255, 255, 0.62);
+  background: transparent;
+}
+
+.view-formal .hero {
+  background: transparent;
+}
+
+.view-formal .hero::before {
+  background: none;
+}
+
+.view-formal .section-alt {
+  background: rgba(246, 245, 249, 0.4);
+}
+
+.view-formal .footer {
+  background: rgba(246, 245, 249, 0.6);
+}

@@ -4,7 +4,7 @@
 
 html[data-view='chooser'],
 html[data-view='chooser'] body {
-  background: #c4c4c4;
+  background: #9c9c9c;
 }
 
 .chooser {
@@ -31,21 +31,6 @@ html[data-view='chooser'] body {
   pointer-events: none;
 }
 
-.gf-canvas {
-  width: 100%;
-  height: 100%;
-  filter: blur(70px);
-  transform: scale(1.25); /* hide the soft edge the heavy blur leaves */
-}
-
-.gf-grain {
-  position: absolute;
-  inset: 0;
-  opacity: 0.18;
-  mix-blend-mode: soft-light;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
 .ch-header,
 .ch-cards,
 .ch-note {
@@ -57,16 +42,26 @@ html[data-view='chooser'] body {
 }
 
 .ch-header {
-  padding-top: clamp(40px, 9vh, 96px);
+  width: fit-content;
+  margin-top: clamp(24px, 4vh, 56px);
+  margin-bottom: clamp(20px, 3vh, 36px);
+  max-width: calc(100% - 32px);
+  padding-inline: 0;
   text-align: center;
   pointer-events: none;
+  perspective: 900px;
 }
 
-/* white text in "difference" mode: dark over the light greys, light over
-   the dark circle, so it stays readable wherever the circle drifts */
-.ch-header,
+/* the note under the cards: frosted glass, like the captions */
 .ch-note {
-  mix-blend-mode: difference;
+  --ch-text: #141414;
+  --ch-muted: rgba(20, 20, 20, 0.66);
+  color: var(--ch-text);
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 20px;
+  max-width: calc(100% - 32px);
 }
 
 /* captions live inside the floating cards (blend can't reach the backdrop
@@ -90,6 +85,115 @@ html[data-view='chooser'] body {
   padding: 4px 10px 5px;
 }
 
+/* ---------- the nameplate: a floating slab of glass ---------- */
+.ch-plate-float {
+  animation: chPlateFloat 4.6s ease-in-out infinite;
+}
+
+@keyframes chPlateFloat {
+  0%, 100% { transform: translateY(0) rotate(-0.4deg); }
+  50% { transform: translateY(-10px) rotate(0.4deg); }
+}
+
+.ch-plate {
+  --ch-text: #111111;
+  --ch-muted: rgba(17, 17, 17, 0.62);
+  position: relative;
+  overflow: hidden;
+  padding: 26px clamp(26px, 4.5vw, 52px) 22px;
+  color: var(--ch-text);
+  border-radius: 26px;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.5) 55%, rgba(236, 236, 236, 0.66));
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  /* bevelled glass: a bright top edge, a darker bottom edge, a hairline frame */
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1.5px 0 rgba(0, 0, 0, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+    0 1px 2px rgba(0, 0, 0, 0.08);
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* engraved inner frame */
+.ch-plate::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 19px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+}
+
+/* a light streak that slides across the glass as the plate leans */
+.ch-plate-sheen {
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.75) 48%, rgba(255, 255, 255, 0.15) 53%, transparent 60%);
+  transform: translateX(calc((var(--gx, 30%) - 50%) * 0.8));
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+.ch-plate > :not(.ch-plate-sheen) {
+  position: relative;
+}
+
+.ch-plate h1 {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* one mark per view, taken from each card: the violet strap, the neon
+   stripe, the 8-bit grass */
+.ch-marks {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.ch-marks i {
+  width: 28px;
+  height: 5px;
+  border-radius: 3px;
+}
+
+.ch-mark-formal {
+  background: #4c1d95;
+}
+
+.ch-mark-fun {
+  background: linear-gradient(90deg, #ff2bd6, #c040ff, #2ef2ff);
+  box-shadow: 0 0 8px rgba(192, 64, 255, 0.6);
+}
+
+.ch-mark-journey {
+  border-radius: 0 !important;
+  background: linear-gradient(#3fae3a 0 50%, #b8682a 50%);
+  image-rendering: pixelated;
+}
+
+/* the shadow stays on the ground and tightens as the plate rises */
+.ch-plate-shadow {
+  display: block;
+  width: 70%;
+  height: 14px;
+  margin: 14px auto 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.32), transparent);
+  filter: blur(3px);
+  animation: chPlateShadow 4.6s ease-in-out infinite;
+}
+
+@keyframes chPlateShadow {
+  0%, 100% { transform: scaleX(1); opacity: 1; }
+  50% { transform: scaleX(0.82); opacity: 0.6; }
+}
+
 .ch-header h1 {
   margin: 0;
   font-size: clamp(2.2rem, 5vw, 3.6rem);
@@ -105,7 +209,7 @@ html[data-view='chooser'] body {
 }
 
 .ch-question {
-  margin: 2.5rem 0 0.5rem;
+  margin: 0.9rem 0 0;
   font-size: 1.15rem;
 }
 
@@ -213,8 +317,9 @@ html[data-view='chooser'] body {
 }
 
 .ch-note {
-  margin-top: 2.5rem;
-  padding-bottom: 48px;
+  width: fit-content;
+  margin: 2.5rem auto 48px;
+  padding: 8px 18px;
   font-size: 0.95rem;
   color: var(--ch-muted);
   text-align: center;

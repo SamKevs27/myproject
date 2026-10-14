@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import GradientField from './components/GradientField'
 import Footer from './components/Footer'
 import MotionLayer from './components/MotionLayer'
 import GlitchOverlay from './components/GlitchOverlay'
@@ -79,6 +80,7 @@ function SiteShell({ mode, children }) {
   return (
     <ViewModeContext.Provider value={mode}>
       <div className={`app-shell${formal ? ' view-formal' : ''}`}>
+        <GradientField className="site-gradient" />
         {!formal && <MotionLayer />}
         {!formal && <GlitchOverlay />}
         <Navbar />

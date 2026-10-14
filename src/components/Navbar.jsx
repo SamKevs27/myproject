@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
-import { FORMAL_PATH, FUN_PATH, JOURNEY_PATH, pathFor, sectionHref } from '../lib/routes'
+import { pathFor, sectionHref } from '../lib/routes'
 import { useViewMode } from '../context/ViewMode'
 import { switchView } from '../lib/switchView'
 
@@ -106,15 +106,12 @@ export default function Navbar() {
     }
   }, [open])
 
-  // switch to another view of the portfolio
-  const switchTo = (path, effect) => (e) => {
+  // back to the main menu, leaving with this view's own transition
+  const exit = (e) => {
     e.preventDefault()
     setOpen(false)
-    switchView(navigate, path, effect)
+    switchView(navigate, '/', mode)
   }
-  const toFormal = switchTo(FORMAL_PATH, 'formal')
-  const toFun = switchTo(FUN_PATH, 'fun')
-  const toJourney = switchTo(JOURNEY_PATH, 'journey')
 
   // Always scroll on click, even when the hash is already the same.
   const goTo = (e, sectionId) => {
@@ -155,26 +152,12 @@ export default function Navbar() {
             </li>
           ))}
           <li className="nav-formal-item" style={{ '--i': NAV_LINKS.length }}>
-            {mode === 'formal'
-              ? <a href={FUN_PATH} onClick={toFun}>Make it fun</a>
-              : <a href={FORMAL_PATH} onClick={toFormal}>Formal view</a>}
+            <a href="/" onClick={exit}>Exit</a>
           </li>
-          {mode === 'formal' && (
-            <li className="nav-formal-item" style={{ '--i': NAV_LINKS.length + 1 }}>
-              <a href={JOURNEY_PATH} onClick={toJourney}>Start journey</a>
-            </li>
-          )}
         </ul>
 
         <div className="navbar-actions">
-          {mode === 'formal' ? (
-            <>
-              <a href={FUN_PATH} className="navbar-formal" onClick={toFun}>Make it fun</a>
-              <a href={JOURNEY_PATH} className="navbar-formal" onClick={toJourney}>Start journey</a>
-            </>
-          ) : (
-            <a href={FORMAL_PATH} className="navbar-formal" onClick={toFormal}>Formal view</a>
-          )}
+          <a href="/" className="navbar-formal" onClick={exit}>Exit</a>
           {home.cvUrl && (
             <a href={home.cvUrl} target="_blank" rel="noreferrer" className="navbar-cv">Download CV</a>
           )}

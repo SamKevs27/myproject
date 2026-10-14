@@ -154,6 +154,52 @@ function ThemeLayer({ layer, name, onOpened }) {
  * one grows its world out of the card, shows a themed "Get started" button,
  * and docks the other two cards at the bottom so you can still switch.
  */
+// The nameplate above the cards: a slab of glass that floats and leans
+// toward the cursor, with a mark for each of the three views.
+function Nameplate({ name, role }) {
+  const plateRef = useRef(null)
+
+  useEffect(() => {
+    const plate = plateRef.current
+    if (!plate || prefersReducedMotion()) return undefined
+    let raf = 0
+    const onMove = (e) => {
+      const px = e.clientX / window.innerWidth
+      const py = e.clientY / window.innerHeight
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        plate.style.setProperty('--ry', `${(px - 0.5) * 10}deg`)
+        plate.style.setProperty('--rx', `${(0.5 - py) * 8}deg`)
+        plate.style.setProperty('--gx', `${px * 100}%`)
+      })
+    }
+    window.addEventListener('pointermove', onMove, { passive: true })
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('pointermove', onMove)
+    }
+  }, [])
+
+  return (
+    <header className="ch-header">
+      <div className="ch-plate-float">
+        <div className="ch-plate" ref={plateRef}>
+          <span className="ch-plate-sheen" aria-hidden="true" />
+          <h1>{name}</h1>
+          <p className="ch-role">{role}</p>
+          <span className="ch-marks" aria-hidden="true">
+            <i className="ch-mark-formal" />
+            <i className="ch-mark-fun" />
+            <i className="ch-mark-journey" />
+          </span>
+          <p className="ch-question">How would you like to see my portfolio?</p>
+        </div>
+      </div>
+      <span className="ch-plate-shadow" aria-hidden="true" />
+    </header>
+  )
+}
+
 export default function ChooserPage() {
   const { home } = usePortfolioContent()
   const navigate = useNavigate()
@@ -266,11 +312,7 @@ export default function ChooserPage() {
       <GradientField className="ch-gradient" />
       {layers.map((layer) => <ThemeLayer key={layer.key} layer={layer} name={name} onOpened={onOpened} />)}
 
-      <header className="ch-header">
-        <h1>{name}</h1>
-        <p className="ch-role">{role}</p>
-        <p className="ch-question">How would you like to see my portfolio?</p>
-      </header>
+      <Nameplate name={name} role={role} />
 
       {current && (
         <section key={current.id} className={`ch-intro ch-intro-${current.id}`} aria-live="polite">
