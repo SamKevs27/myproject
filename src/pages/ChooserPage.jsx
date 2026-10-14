@@ -1,10 +1,14 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import portrait from '../assets/portrait.webp'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
 import { usePixelFonts } from '../hooks/usePixelFonts'
+import { prefersReducedMotion } from '../hooks/useInView'
 import { FORMAL_PATH, FUN_PATH, JOURNEY_PATH } from '../lib/routes'
 import { switchView } from '../lib/switchView'
+import DotField from '../components/DotField'
+import { FormalStage, FunStage, JourneyStage } from '../chooser/Stages'
+import Vines from '../chooser/Vines'
 import { spriteCanvas, spriteDataUrl } from '../journey/renderSprite'
 import { HERO, SAM, characterFrames } from '../journey/sprites/character'
 import { CLOUD } from '../journey/sprites/scenery'
@@ -64,14 +68,56 @@ function JourneyPreview() {
   )
 }
 
+// A view's world, grown out of the clicked card's outline until it fills the screen.
+function ThemeLayer({ layer, name, onOpened }) {
+  const ref = useRef(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return undefined
+    const r = layer.rect
+    const clip = `inset(${r.top}px ${window.innerWidth - r.right}px ${window.innerHeight - r.bottom}px ${r.left}px round 14px)`
+    el.style.setProperty('--clip', clip)
+    if (prefersReducedMotion()) {
+      el.classList.add('is-open')
+      onOpened(layer.key)
+      return undefined
+    }
+    let id = requestAnimationFrame(() => {
+      id = requestAnimationFrame(() => el.classList.add('is-open'))
+    })
+    return () => cancelAnimationFrame(id)
+  }, [layer, onOpened])
+
+  return (
+    <div
+      ref={ref}
+      className={`ch-layer ch-layer-${layer.id}`}
+      onTransitionEnd={(e) => { if (e.target === ref.current && e.propertyName === 'clip-path') onOpened(layer.key) }}
+    >
+      {layer.id === 'formal' && <FormalStage name={name} />}
+      {layer.id === 'fun' && <FunStage />}
+      {layer.id === 'journey' && <JourneyStage />}
+    </div>
+  )
+}
+
 /**
- * The landing page: three cards, one per way of seeing the portfolio. Each
- * card previews its own look; picking one plays that view's transition.
+ * The landing page. Three floating cards over a reactive dot field; picking
+ * one grows its world out of the card, shows a themed "Get started" button,
+ * and docks the other two cards at the bottom so you can still switch.
  */
 export default function ChooserPage() {
   const { home } = usePortfolioContent()
   const navigate = useNavigate()
   usePixelFonts()
+
+  const [chosen, setChosen] = useState(null)
+  const [layers, setLayers] = useState([])
+  const [hovered, setHovered] = useState(null)
+  const itemRefs = useRef({})
+  const cardRefs = useRef({})
+  const flipFrom = useRef(null)
+  const layerKey = useRef(0)
 
   useEffect(() => {
     document.documentElement.dataset.view = 'chooser'
@@ -83,52 +129,135 @@ export default function ChooserPage() {
 
   const views = [
     {
-      id: 'formal', path: FORMAL_PATH, title: 'Formal', action: 'Open formal view',
+      id: 'formal', path: FORMAL_PATH, title: 'Formal',
       text: 'Straight to the point. Clean and quick to read.',
+      intro: 'A clean, quick read of my work.',
       preview: <FormalPreview name={name} role={role} />,
     },
     {
-      id: 'fun', path: FUN_PATH, title: 'Fun', action: 'Make it fun',
+      id: 'fun', path: FUN_PATH, title: 'Fun',
       text: 'Neon, animated and full of little surprises.',
+      intro: 'Neon, motion and a few surprises.',
       preview: <FunPreview word={home.heroDisplayName || name.split(' ')[0]} />,
     },
     {
-      id: 'journey', path: JOURNEY_PATH, title: 'Journey', action: 'Start journey',
+      id: 'journey', path: JOURNEY_PATH, title: 'Journey',
       text: 'Play through my portfolio as an 8-bit game.',
+      intro: 'Play through my portfolio as an 8\u2011bit game.',
       preview: <JourneyPreview />,
     },
   ]
+  const current = views.find((v) => v.id === chosen)
 
-  const open = (view) => (e) => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return // let new-tab clicks through
-    e.preventDefault()
-    switchView(navigate, view.path, view.id)
+  // FLIP: remember where every card was, then animate into the new layout.
+  const recordPositions = () => {
+    flipFrom.current = Object.fromEntries(
+      Object.entries(itemRefs.current).filter(([, el]) => el).map(([id, el]) => [id, el.getBoundingClientRect()]),
+    )
   }
 
+  useLayoutEffect(() => {
+    const from = flipFrom.current
+    flipFrom.current = null
+    if (!from || prefersReducedMotion()) return
+    for (const [id, el] of Object.entries(itemRefs.current)) {
+      if (!el || !from[id]) continue
+      const to = el.getBoundingClientRect()
+      if (!to.width) continue
+      const dx = from[id].left - to.left
+      const dy = from[id].top - to.top
+      const sx = from[id].width / to.width
+      const sy = from[id].height / to.height
+      el.style.transition = 'none'
+      el.style.transformOrigin = 'top left'
+      el.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`
+      el.getBoundingClientRect() // flush so the inverted position applies
+      el.style.transition = 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1)'
+      el.style.transform = ''
+    }
+  }, [chosen])
+
+  const choose = (view) => {
+    if (view.id === chosen) return
+    const rect = cardRefs.current[view.id]?.getBoundingClientRect()
+    recordPositions()
+    layerKey.current += 1
+    setLayers((prev) => [...prev, { key: layerKey.current, id: view.id, rect }])
+    setChosen(view.id)
+    setHovered(null)
+  }
+
+  // once the newest world has fully grown, drop the ones underneath it
+  const onOpened = useMemo(() => (key) => setLayers((prev) => prev.filter((l) => l.key >= key)), [])
+
+  const backToMenu = () => {
+    recordPositions()
+    setChosen(null)
+    setLayers([])
+  }
+
+  const getStarted = () => { if (current) switchView(navigate, current?.path, current?.id) }
+
   return (
-    <div className="chooser">
+    <div className={`chooser${chosen ? ` is-chosen is-${chosen}` : ''}`}>
+      <DotField className="ch-dots" />
+      {layers.map((layer) => <ThemeLayer key={layer.key} layer={layer} name={name} onOpened={onOpened} />)}
+
       <header className="ch-header">
         <h1>{name}</h1>
         <p className="ch-role">{role}</p>
         <p className="ch-question">How would you like to see my portfolio?</p>
       </header>
 
-      <ul className="ch-cards">
-        {views.map((view) => (
-          <li key={view.id}>
-            <a className={`ch-card ch-card-${view.id}`} href={view.path} onClick={open(view)}>
-              {view.preview}
-              <span className="ch-body">
-                <span className="ch-title">{view.title}</span>
-                <span className="ch-text">{view.text}</span>
-                <span className="ch-action">{view.action}</span>
-              </span>
-            </a>
+      {current && (
+        <section key={current.id} className={`ch-intro ch-intro-${current.id}`} aria-live="polite">
+          <button type="button" className="ch-back" onClick={backToMenu}>All views</button>
+          <p className="ch-intro-name">{name}</p>
+          <h2 className="ch-intro-title">{current.title}</h2>
+          <p className="ch-intro-text">{current.intro}</p>
+          <button type="button" className={`ch-start ch-start-${current.id}`} onClick={getStarted}>
+            <span>{current.id === 'journey' ? '▶ GET STARTED' : 'Get started'}</span>
+          </button>
+        </section>
+      )}
+
+      <ul className={`ch-cards${chosen ? ' is-docked' : ''}`}>
+        {views.map((view, i) => (
+          <li
+            key={view.id}
+            ref={(el) => { itemRefs.current[view.id] = el }}
+            className={`ch-item${view.id === chosen ? ' is-hidden' : ''}`}
+            style={{ '--float': `${4.6 + i * 1.1}s`, '--delay': `${-i * 1.7}s` }}
+          >
+            <div className="ch-float">
+              <a
+                ref={(el) => { cardRefs.current[view.id] = el }}
+                className={`ch-card ch-card-${view.id}`}
+                href={view.path}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return // new-tab clicks go straight there
+                  e.preventDefault()
+                  choose(view)
+                }}
+                onPointerEnter={() => setHovered(view.id)}
+                onPointerLeave={() => setHovered(null)}
+                onFocus={() => setHovered(view.id)}
+                onBlur={() => setHovered(null)}
+                aria-label={`${view.title}: ${view.text}`}
+              >
+                {view.preview}
+                {view.id === 'journey' && <Vines active={hovered === 'journey'} />}
+                <span className="ch-body">
+                  <span className="ch-title">{view.title}</span>
+                  <span className="ch-text">{view.text}</span>
+                </span>
+              </a>
+            </div>
           </li>
         ))}
       </ul>
 
-      <p className="ch-note">Same content in every view. You can switch at any time.</p>
+      {!chosen && <p className="ch-note">Same content in every view. You can switch at any time.</p>}
     </div>
   )
 }
