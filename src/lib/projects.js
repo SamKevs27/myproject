@@ -16,3 +16,16 @@ export function linkLabel(link) {
 export function sortByOrder(items) {
   return [...items].sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999))
 }
+
+// Categories are read from each project's tags; first match wins.
+export const CATEGORIES = [
+  { key: 'ai', label: 'AI', match: /^(ai|mediapipe|machine learning|computer vision)$/i },
+  { key: 'design', label: 'UI/UX', match: /^(ui\/ux|prototype|figma)$/i },
+  { key: 'mobile', label: 'Mobile', match: /^(mobile|flutter|dart)$/i },
+  { key: 'web', label: 'Web', match: /^(web|javascript|react|next\.js|responsive design)$/i },
+]
+
+export function categoryOf(project) {
+  const tags = project.tech || []
+  return CATEGORIES.find((c) => tags.some((t) => c.match.test(t))) || CATEGORIES.at(-1)
+}

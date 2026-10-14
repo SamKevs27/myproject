@@ -1,10 +1,11 @@
 import { PALETTE as C } from './sprites/palette'
-import { characterFrames } from './sprites/character'
+import { HERO, SAM, characterFrames } from './sprites/character'
 import {
   BUSH, CHEST_CLOSED, CHEST_OPEN, CLOUD, COIN, DIRT_TILE, DUST, FLAG, GROUND_TILE,
   PALM_FRONDS, QUESTION_BLOCK, USED_BLOCK,
 } from './sprites/scenery'
 import { drawSprite, spriteCanvas } from './renderSprite'
+import { BLOCK_BOTTOM, BLOCK_SIZE } from './world'
 
 const mod = (n, m) => ((n % m) + m) % m
 
@@ -101,20 +102,6 @@ function palmStrip(width, height, seed) {
 
 /* ---------- checkpoint props ---------- */
 
-function drawSign(ctx, x, groundY) {
-  ctx.fillStyle = C.outline
-  ctx.fillRect(x + 6, groundY - 22, 4, 22)
-  ctx.fillStyle = C.brown1
-  ctx.fillRect(x + 7, groundY - 22, 2, 22)
-  ctx.fillStyle = C.outline
-  ctx.fillRect(x - 3, groundY - 34, 22, 14)
-  ctx.fillStyle = C.brown2
-  ctx.fillRect(x - 2, groundY - 33, 20, 12)
-  ctx.fillStyle = C.brown1
-  ctx.fillRect(x, groundY - 30, 16, 2)
-  ctx.fillRect(x, groundY - 26, 11, 2)
-}
-
 function drawFlagpole(ctx, x, groundY, raise, height = 60) {
   ctx.fillStyle = C.outline
   ctx.fillRect(x - 1, groundY - height - 4, 4, height + 4)
@@ -124,6 +111,25 @@ function drawFlagpole(ctx, x, groundY, raise, height = 60) {
   ctx.fillRect(x - 1, groundY - height - 5, 4, 4)
   const flagY = groundY - 12 - Math.round(raise * (height - 16))
   drawSprite(ctx, FLAG, x + 2, flagY)
+}
+
+// floating grass ledge (one-way platform) with a little hanging dirt
+function drawLedge(ctx, x1, x2, topY) {
+  const w = x2 - x1
+  ctx.fillStyle = C.outline
+  ctx.fillRect(x1 - 1, topY - 1, w + 2, 14)
+  ctx.fillStyle = C.brown2
+  ctx.fillRect(x1, topY + 4, w, 8)
+  ctx.fillStyle = C.brown1
+  for (let x = x1 + 3; x < x2 - 2; x += 7) ctx.fillRect(x, topY + 7, 2, 2)
+  ctx.fillStyle = C.green3
+  ctx.fillRect(x1, topY, w, 4)
+  ctx.fillStyle = C.green4
+  for (let x = x1 + 1; x < x2; x += 4) ctx.fillRect(x, topY, 2, 1)
+  ctx.fillStyle = C.outline
+  ctx.fillRect(x1 + 6, topY + 13, w - 12, 2)
+  ctx.fillStyle = C.brown1
+  ctx.fillRect(x1 + 7, topY + 13, w - 14, 1)
 }
 
 function drawCastle(ctx, x, groundY) {
@@ -158,8 +164,14 @@ function drawCastle(ctx, x, groundY) {
  * The jungle level, drawn to a small canvas at base resolution. `resize(W, H,
  * groundH)` rebuilds the strips; `draw(state)` renders one frame.
  */
+/**
+ * The jungle level, drawn to a small canvas at base resolution. `resize(W, H,
+ * groundH)` rebuilds the strips; `draw(state, world)` renders one frame with
+ * the camera centred on `state.camX`.
+ */
 export function createScene(ctx) {
-  const frames = characterFrames()
+  const hero = characterFrames(HERO)
+  const sam = characterFrames(SAM)
   let W = 0
   let H = 0
   let groundY = 0
@@ -168,6 +180,14 @@ export function createScene(ctx) {
   const tile = (img, offset, y) => {
     const start = -mod(Math.round(offset), img.width)
     for (let x = start; x < W; x += img.width) ctx.drawImage(img, x, Math.round(y))
+  }
+
+  const pickFrame = (frames, c) => {
+    if (c.airborne) return frames.jump
+    if (c.walking) return frames.walk[c.walkFrame % 4]
+    if (c.blink) return frames.blink
+    if (c.breathe) return frames.breathe
+    return frames.idle
   }
 
   return {
@@ -185,10 +205,15 @@ export function createScene(ctx) {
     },
 
     get groundY() { return groundY },
+    get width() { return W },
 
-    draw(s) {
+    // world x → screen x at base resolution
+    toScreen(x, camX) { return Math.round(x - camX + W / 2) },
+
+    draw(s, world) {
       ctx.imageSmoothingEnabled = false
-      const cx = Math.round(W / 2)
+      const cam = s.camX
+      const sx = (x) => Math.round(x - cam + W / 2)
 
       // sky: two flat bands, no gradients
       ctx.fillStyle = C.sky
@@ -196,59 +221,71 @@ export function createScene(ctx) {
       ctx.fillStyle = C.skyLow
       ctx.fillRect(0, Math.round(groundY * 0.62), W, H)
 
-      // clouds drift on their own and creep past with the world
+      // clouds drift on their own and creep past with the camera
       const cloud = spriteCanvas(CLOUD)
       const cloudBand = 420
-      const cloudOffset = s.worldX * 0.1 + s.time * 3
-      for (const [cxw, cy] of [[30, 0.1], [190, 0.22], [320, 0.06]]) {
+      const cloudOffset = cam * 0.1 + s.time * 3
+      for (const [cxw, cy] of [[30, 0.08], [190, 0.2], [320, 0.04]]) {
         for (let k = -1; k <= Math.ceil(W / cloudBand); k++) {
           const x = Math.round(cxw + k * cloudBand - mod(cloudOffset, cloudBand))
           ctx.drawImage(cloud, x, Math.round(groundY * cy) + 6)
         }
       }
 
-      tile(strips.far, s.worldX * 0.15, groundY - strips.far.height)
-      tile(strips.near, s.worldX * 0.3, groundY - strips.near.height)
-      tile(strips.trees, s.worldX * 0.55, groundY - strips.trees.height)
-      tile(strips.palms, s.worldX * 0.8, groundY - strips.palms.height)
+      tile(strips.far, cam * 0.15, groundY - strips.far.height)
+      tile(strips.near, cam * 0.3, groundY - strips.near.height)
+      tile(strips.trees, cam * 0.55, groundY - strips.trees.height)
+      tile(strips.palms, cam * 0.8, groundY - strips.palms.height)
 
       // ground: grass row, then dirt to the bottom
       const groundTile = spriteCanvas(GROUND_TILE)
       const dirt = spriteCanvas(DIRT_TILE)
-      tile(groundTile, s.worldX, groundY)
-      for (let y = groundY + 16; y < H; y += 16) tile(dirt, s.worldX, y)
+      tile(groundTile, cam, groundY)
+      for (let y = groundY + 16; y < H; y += 16) tile(dirt, cam, y)
 
-      // checkpoint props
-      for (const cp of s.checkpoints) {
-        const sx = Math.round(cp.x - s.worldX + cx)
-        if (sx < -90 || sx > W + 90) continue
-        const st = s.props[cp.id] || {}
-        if (cp.kind === 'sign') drawSign(ctx, sx + 22, groundY)
-        else if (cp.kind === 'flag') drawFlagpole(ctx, sx + 26, groundY, st.raise || 0)
-        else if (cp.kind === 'block') {
-          const bump = st.bump > 0 ? -Math.round(Math.sin(st.bump * Math.PI) * 5) : 0
-          drawSprite(ctx, st.opened ? USED_BLOCK : QUESTION_BLOCK, sx - 8, groundY - 58 + bump)
-          if (st.coin > 0) drawSprite(ctx, COIN, sx - 4, groundY - 66 - Math.round((1 - st.coin) * 22))
-        } else if (cp.kind === 'chest') {
-          drawSprite(ctx, st.opened ? CHEST_OPEN : CHEST_CLOSED, sx + 18, groundY - 12)
-          if (st.coin > 0) drawSprite(ctx, COIN, sx + 22, groundY - 22 - Math.round((1 - st.coin) * 22))
-        } else if (cp.kind === 'castle') {
-          drawFlagpole(ctx, sx - 34, groundY, st.raise || 0, 80)
-          drawCastle(ctx, sx + 30, groundY)
+      // skill blocks
+      world.blocks.forEach((b) => {
+        const st = s.blocks[b.id] || {}
+        const bump = st.bump > 0 ? -Math.round(Math.sin(st.bump * Math.PI) * 5) : 0
+        const top = groundY - BLOCK_BOTTOM - BLOCK_SIZE + bump
+        drawSprite(ctx, st.used ? USED_BLOCK : QUESTION_BLOCK, sx(b.x) - 8, top)
+        if (st.coin > 0) drawSprite(ctx, COIN, sx(b.x) - 4, top - 10 - Math.round((1 - st.coin) * 24))
+      })
+
+      // treasure chest
+      const chestX = sx(world.chest.x) - 8
+      drawSprite(ctx, s.chestOpen ? CHEST_OPEN : CHEST_CLOSED, chestX, groundY - 12)
+      if (s.chestGlow > 0) {
+        ctx.fillStyle = C.yellow
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2 + s.time * 3
+          const r = 10 + (1 - s.chestGlow) * 18
+          ctx.fillRect(chestX + 8 + Math.round(Math.cos(a) * r), groundY - 14 + Math.round(Math.sin(a) * r * 0.6), 2, 2)
         }
       }
 
+      // parkour ledges, each with a flag that raises once you land on it
+      world.platforms.forEach((p, i) => {
+        const topY = groundY - p.top
+        drawLedge(ctx, sx(p.x1), sx(p.x2), topY)
+        drawFlagpole(ctx, sx(p.x2) - 10, topY, s.flags[i] || 0, 30)
+      })
+
+      // castle
+      drawFlagpole(ctx, sx(world.castle.x) - 34, groundY, s.castleRaise || 0, 80)
+      drawCastle(ctx, sx(world.castle.x) + 30, groundY)
+
+      // Sam, the NPC: idles and turns to face you
+      drawSprite(ctx, pickFrame(sam, s.sam), sx(world.sam.x) - 8, groundY - 24, { flip: s.sam.facing < 0 })
+
       // dust puffs stay where they were kicked up
       for (const p of s.dust) {
-        drawSprite(ctx, DUST[p.age > 0.5 ? 1 : 0], Math.round(p.x - s.worldX + cx) - 2, groundY - 3 - Math.round(p.age * 3))
+        drawSprite(ctx, DUST[p.age > 0.5 ? 1 : 0], sx(p.x) - 2, groundY - p.h - 3 - Math.round(p.age * 3))
       }
 
-      // the character
-      let sprite = frames.idle
-      if (s.walking) sprite = frames.walk[s.walkFrame % 4]
-      else if (s.blink) sprite = frames.blink
-      else if (s.breathe) sprite = frames.breathe
-      drawSprite(ctx, sprite, cx - 8, groundY - 24 - Math.round(s.jump), { flip: s.facing < 0 })
+      // the player
+      const pl = s.player
+      drawSprite(ctx, pickFrame(hero, pl), sx(pl.x) - 8, groundY - 24 - Math.round(pl.h), { flip: pl.facing < 0 })
     },
   }
 }

@@ -60,15 +60,14 @@ This makes the `og:image` absolute so LinkedIn/WhatsApp show the preview card in
 
 - `/` formal, minimalist résumé view
 - `/fun` neon animated site ("Make it fun")
-- `/journey` 8-bit side-scroller ("Start Journey"); scroll to walk, ←/→ or A/D to hop between checkpoints, deep links like `/journey#projects`
+- `/journey` 8-bit platformer ("Start Journey"): ←/→ or A/D move, Space/↑/W jump, E/Enter talk/open, on-screen buttons on phones, deep links like `/journey#projects`
+  - meet Sam (about, in 2-line speech bubbles) → bonk 7 "?" blocks (skills) → open the chest (project cards) → 3 parkour ledges (education + experience) → castle (contact + CV)
 
-### Customizing the 8-bit character
+### Customizing the 8-bit characters
 
-Edit `CHARACTER` in `src/journey/sprites/character.js` (hair, skin, shirt, pants and shoe colours, `glasses: true/false`).
-Sprites are rows of characters; each letter maps to a colour in the sprite's `colours` map (`.` is transparent).
+Edit `SAM` (the NPC) or `HERO` (the player) in `src/journey/sprites/character.js`: hair, skin, shirt, pants and shoe colours, `cap` for the hero, `glasses: true/false` for Sam.
+Sprites are rows of characters; each letter maps to a colour in the sprite's `colours` map (`.` is transparent). Card illustrations live in `src/journey/sprites/cardArt.js`.
 
-### Adding a checkpoint
+### Changing the level
 
-1. Add the section to `SECTIONS` in `src/journey/world.js` (id, world label, title).
-2. Push a checkpoint in `buildWorld()` with an `x` position, a `kind` (`sign`, `flag`, `block`, `chest`, `castle`) and its `data`.
-3. Render its content in `CheckpointDialog` in `src/journey/Dialogs.jsx`.
+The layout is built from your content in `buildWorld()` in `src/journey/world.js`: one "?" block per skill group, one card per project, one ledge per experience/education entry (oldest first). Add a new stop by placing it there, drawing it in `src/journey/scene.js`, and showing its panel from `src/pages/JourneyPage.jsx`.

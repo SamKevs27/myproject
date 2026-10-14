@@ -6,9 +6,10 @@ html[data-view='journey'] body {
   background: #5aa8f0;
 }
 
-/* the loop eases the character itself; native smooth scrolling would lag the sticky stage */
+/* the game owns the keyboard and the screen: no page scrolling or pull-to-refresh */
 html[data-view='journey'] {
   scroll-behavior: auto;
+  overscroll-behavior: none;
 }
 
 .journey {
@@ -63,13 +64,15 @@ html[data-view='journey'] {
   font-size: 10px;
 }
 
-/* sticky full-screen stage; the tall parent provides the scroll distance */
+/* full-screen stage */
 .j-stage {
-  position: sticky;
-  top: 0;
+  position: relative;
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .j-canvas {
@@ -184,7 +187,7 @@ html[data-view='journey'] {
   position: absolute;
   left: 0;
   right: 0;
-  top: max(64px, calc(var(--char-top, 60vh) * 0.18));
+  top: max(64px, 12vh);
   z-index: 10;
   display: flex;
   flex-direction: column;
@@ -256,30 +259,29 @@ html[data-view='journey'] {
   50% { opacity: 0; }
 }
 
-/* ---------- checkpoint dialogs ---------- */
-.j-dialog {
+/* ---------- panels (skills, parkour, contact) ---------- */
+.j-panel-slot {
   position: absolute;
   z-index: 15;
-  top: 72px;
-  left: 50%;
-  width: min(640px, calc(100vw - 40px));
-  max-height: calc(var(--char-top, 60vh) - 90px);
+  top: 64px;
+  left: 20px;
+  width: min(480px, 42vw);
+  display: grid;
+  gap: 16px;
+}
+
+.j-dialog {
+  max-height: calc(var(--ground-top, 70vh) - 120px);
   overflow-y: auto;
   padding: 18px 22px 20px;
   background: var(--j-panel);
   border: 4px solid var(--j-white);
-  transform: translate(-50%, -24px);
-  opacity: 0;
-  visibility: hidden;
-  transition: transform 0.25s steps(4), opacity 0.25s steps(4), visibility 0s 0.25s;
   scrollbar-color: var(--j-yellow) var(--j-ink);
+  animation: panelIn 0.25s steps(4) both;
 }
 
-.j-dialog.is-open {
-  transform: translate(-50%, 0);
-  opacity: 1;
-  visibility: visible;
-  transition: transform 0.25s steps(4), opacity 0.25s steps(4);
+@keyframes panelIn {
+  from { transform: translateY(-24px); opacity: 0; }
 }
 
 /* typewriter intro line: monospace font, so width can step by characters */
@@ -296,7 +298,12 @@ html[data-view='journey'] {
 }
 
 .j-dialog.is-open .j-type {
-  animation: typing calc(var(--n) * 45ms) steps(var(--n)) both;
+  animation: typing calc(var(--n) * 30ms) steps(var(--n)) both;
+}
+
+/* panel headings can be long ("LANGUAGES & FRAMEWORKS"), so a size that fits */
+.j-panel-slot .j-type {
+  font-size: 11px;
 }
 
 @keyframes typing {
@@ -480,7 +487,7 @@ html[data-view='journey'] {
   position: absolute;
   z-index: 25;
   left: 50%;
-  top: calc(var(--char-top, 60vh) - 20px);
+  top: calc(var(--ground-top, 70vh) - var(--px, 4px) * 44);
   width: 32px;
   height: 32px;
   margin-left: -16px;
@@ -494,7 +501,7 @@ html[data-view='journey'] {
   100% { opacity: 0; transform: translateY(-72px); }
 }
 
-/* ---------- narrow screens: dialogs dock at the bottom over the dirt ---------- */
+/* ---------- narrow screens: panels dock over the dirt, above the touch pad ---------- */
 @media (max-width: 640px) {
   .journey {
     font-size: 20px;
@@ -512,19 +519,23 @@ html[data-view='journey'] {
     flex-basis: 100%;
   }
 
-  .j-dialog {
+  .j-panel-slot {
     top: auto;
-    bottom: 0;
     left: 0;
-    width: 100%;
-    max-height: calc(100% - var(--ground-top, 50vh) - 8px);
-    transform: translateY(24px);
-    border-width: 4px 0 0;
-    box-shadow: none;
+    right: 0;
+    bottom: 112px;
+    width: auto;
   }
 
-  .j-dialog.is-open {
-    transform: none;
+  .j-dialog {
+    max-height: calc(100dvh - var(--ground-top, 60vh) - 124px);
+    border-width: 4px 0;
+    box-shadow: none;
+    animation-name: panelUp;
+  }
+
+  @keyframes panelUp {
+    from { transform: translateY(24px); opacity: 0; }
   }
 
   .j-type {
@@ -561,17 +572,489 @@ html[data-view='journey'] {
 }
 
 .j-static-list .j-dialog {
-  position: static;
-  width: auto;
   max-height: none;
-  transform: none;
-  opacity: 1;
-  visibility: visible;
+  animation: none;
+}
+
+/* screen-reader / search copy of everything: present in the DOM, not on screen */
+.j-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .j-start,
   .j-hint {
     animation: none;
+  }
+}
+
+/* ---------- Sam + chest: clickable spots that follow the camera ---------- */
+.j-anchor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 12;
+  width: 0;
+  height: 0;
+}
+
+.j-hit {
+  position: absolute;
+  left: calc(var(--px, 4px) * -10);
+  top: 0;
+  width: calc(var(--px, 4px) * 20);
+  height: calc(var(--px, 4px) * 26);
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.j-hit-chest {
+  height: calc(var(--px, 4px) * 14);
+}
+
+.j-hit:focus-visible {
+  outline: 4px solid var(--j-yellow);
+}
+
+/* a pixel speech bubble with a stepped tail pointing down */
+.j-hint-bubble,
+.j-bubble {
+  position: absolute;
+  left: 0;
+  bottom: 14px;
+  transform: translateX(-50%);
+  margin: 0;
+  color: var(--j-ink);
+  background: var(--j-white);
+  box-shadow:
+    0 -4px 0 0 var(--j-ink),
+    0 4px 0 0 var(--j-ink),
+    -4px 0 0 0 var(--j-ink),
+    4px 0 0 0 var(--j-ink);
+}
+
+.j-hint-bubble::after,
+.j-bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -12px;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  background: var(--j-white);
+  box-shadow: -4px 0 0 var(--j-ink), 4px 0 0 var(--j-ink), 0 4px 0 var(--j-ink);
+}
+
+.j-hint-bubble {
+  padding: 8px 10px;
+  white-space: nowrap;
+  font-family: var(--j-title);
+  font-size: 9px;
+  animation: blink 1s steps(1) infinite;
+}
+
+.j-bubble {
+  display: grid;
+  width: calc(var(--w) * 1ch + 28px);
+  padding: 10px 14px 8px;
+  font: inherit;
+  font-family: var(--j-text);
+  font-size: 22px;
+  line-height: 1.15;
+  text-align: left;
+  cursor: pointer;
+  animation: bubbleIn 0.18s steps(3) both;
+}
+
+.j-bubble-name {
+  margin-bottom: 4px;
+  font-family: var(--j-title);
+  font-size: 9px;
+  color: var(--j-red);
+}
+
+.j-bubble-line {
+  white-space: nowrap;
+}
+
+.j-bubble-next {
+  justify-self: end;
+  margin-top: 4px;
+  font-family: var(--j-title);
+  font-size: 8px;
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes bubbleIn {
+  from { transform: translateX(-50%) scale(0.6); }
+}
+
+@media (max-width: 640px) {
+  .j-bubble {
+    font-size: 20px;
+  }
+}
+
+/* controls reminder after pressing start */
+.j-controls-hint {
+  position: absolute;
+  z-index: 14;
+  left: 50%;
+  top: 72px;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 10px 14px;
+  white-space: nowrap;
+  font-family: var(--j-title);
+  font-size: 10px;
+  color: var(--j-white);
+  background: var(--j-ink);
+}
+
+/* skill items pop out one by one */
+.j-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.j-slots .j-slot {
+  animation: slotPop 0.24s steps(3) both;
+  animation-delay: calc(var(--i) * 50ms);
+}
+
+@keyframes slotPop {
+  from { transform: translateY(10px); opacity: 0; }
+}
+
+/* ---------- touch pad ---------- */
+.j-pad {
+  position: absolute;
+  z-index: 18;
+  left: 16px;
+  right: 16px;
+  bottom: 18px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.j-pad-dir,
+.j-pad-act {
+  display: flex;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.j-pad-btn {
+  width: 64px;
+  height: 64px;
+  font-family: var(--j-title);
+  font-size: 18px;
+  color: var(--j-ink);
+  background: rgba(252, 252, 252, 0.85);
+  border: none;
+  box-shadow:
+    0 -4px 0 0 var(--j-ink),
+    0 4px 0 0 var(--j-ink),
+    -4px 0 0 0 var(--j-ink),
+    4px 0 0 0 var(--j-ink);
+  touch-action: none;
+}
+
+.j-pad-btn:active {
+  background: var(--j-yellow);
+}
+
+.j-pad-a {
+  background: rgba(224, 60, 40, 0.9);
+  color: var(--j-white);
+}
+
+.j-pad-b {
+  background: rgba(248, 200, 56, 0.9);
+}
+
+/* ---------- treasure: card gallery + zoomed card ---------- */
+.j-gallery,
+.j-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  overflow-y: auto;
+  background: rgba(26, 16, 24, 0.86);
+}
+
+.j-gallery-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  padding: 72px 24px 8px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.j-gallery-head .j-type {
+  margin: 0;
+  animation: typing 0.6s steps(14) both;
+}
+
+.j-gallery-head p {
+  flex: 1;
+  margin: 0;
+}
+
+.j-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 22px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 20px 24px 48px;
+}
+
+/* every card starts inside the chest, small and tilted, then flies to its slot */
+.j-cards .tc {
+  transform: translate(var(--dx, 0), var(--dy, 0)) scale(0.15) rotate(-16deg);
+  opacity: 0;
+}
+
+.j-cards.is-dealt .tc {
+  transform: none;
+  opacity: 1;
+  transition:
+    transform 0.7s cubic-bezier(0.2, 1.35, 0.4, 1) calc(var(--i) * 70ms),
+    opacity 0.15s steps(2) calc(var(--i) * 70ms),
+    translate 0.15s steps(2);
+}
+
+.j-cards.is-static .tc {
+  transition: translate 0.15s steps(2);
+}
+
+.j-modal {
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 72px 16px 24px;
+}
+
+/* ---------- the trading card ---------- */
+.tc {
+  --frame: #7d8b95;
+  --frame-dark: #3b4650;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 176px;
+  padding: 8px;
+  font: inherit;
+  text-align: left;
+  color: var(--j-ink);
+  background: var(--frame);
+  border: 4px solid var(--frame-dark);
+  box-shadow: 4px 4px 0 var(--j-ink);
+  cursor: pointer;
+}
+
+.tc-gold { --frame: #d7a83a; --frame-dark: #7a5212; }
+.tc-violet { --frame: #8a6ab8; --frame-dark: #3e2b63; }
+
+/* corner rivets */
+.tc::before,
+.tc::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  width: 4px;
+  height: 4px;
+  background: var(--frame-dark);
+}
+
+.tc::before { left: 3px; }
+.tc::after { right: 3px; }
+
+button.tc:hover,
+button.tc:focus-visible {
+  translate: 0 -6px;
+}
+
+.tc-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 34px;
+  padding: 4px 6px 4px 8px;
+  background: #c98a5c;
+  border: 3px solid #5a2f12;
+}
+
+.tc-name {
+  font-family: var(--j-title);
+  font-size: 8px;
+  line-height: 1.5;
+  color: var(--j-white);
+  text-shadow: 2px 2px 0 var(--j-ink);
+}
+
+.tc-num {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  font-family: var(--j-title);
+  font-size: 9px;
+  color: var(--j-yellow);
+  background: var(--j-ink);
+  border: 2px solid var(--j-yellow-dark);
+}
+
+.tc-art {
+  display: grid;
+  place-items: center;
+  height: 112px;
+  background: #e9e3d3;
+  border: 3px solid var(--frame-dark);
+}
+
+.tc-art img {
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+}
+
+.tc-icons {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tc-chip {
+  padding: 3px 6px;
+  font-family: var(--j-title);
+  font-size: 7px;
+  color: var(--j-white);
+  background: var(--j-ink);
+  border: 2px solid var(--j-yellow);
+}
+
+.tc-text {
+  display: -webkit-box;
+  min-height: 3.6em;
+  padding: 6px 8px;
+  overflow: hidden;
+  font-family: var(--j-text);
+  font-size: 18px;
+  line-height: 1.1;
+  background: #ecd1aa;
+  border: 3px solid #8a5a2e;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* the zoomed-in card */
+.tc-big {
+  width: min(440px, 100%);
+  cursor: default;
+}
+
+.tc-big .tc-name {
+  font-size: 12px;
+}
+
+.tc-big .tc-num {
+  width: 28px;
+  height: 28px;
+  font-size: 12px;
+}
+
+.tc-big .tc-art {
+  height: 180px;
+}
+
+.tc-big .tc-art img {
+  width: 160px;
+  height: 160px;
+}
+
+.tc-big .tc-chip {
+  font-size: 9px;
+}
+
+.tc-big .tc-text {
+  display: block;
+  font-size: 21px;
+  -webkit-line-clamp: unset;
+}
+
+.tc-big .tc-text p {
+  margin: 0 0 8px;
+}
+
+.tc-meta {
+  color: #8a1e16;
+}
+
+.tc-big .j-tags li {
+  font-size: 18px;
+}
+
+.tc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 6px 4px 2px;
+}
+
+@media (max-width: 640px) {
+  .j-panel-slot .j-type {
+    font-size: 9px;
+  }
+
+  .j-gallery-head {
+    padding: 84px 16px 4px;
+  }
+
+  .j-gallery-head p {
+    flex-basis: 100%;
+    order: 2;
+  }
+
+  .j-cards {
+    gap: 14px;
+    padding: 16px 12px 40px;
+  }
+
+  .j-cards .tc {
+    width: 156px;
+  }
+
+  .j-cards .tc-art {
+    height: 92px;
+  }
+
+  .j-cards .tc-art img {
+    width: 80px;
+    height: 80px;
+  }
+
+  .j-cards .tc-text {
+    font-size: 16px;
   }
 }

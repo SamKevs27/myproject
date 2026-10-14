@@ -4,20 +4,7 @@ import StretchText from '../components/StretchText'
 import ProjectGlyph from '../components/ProjectGlyph'
 import { useInView } from '../hooks/useInView'
 import SectionBackground from '../components/SectionBackground'
-import { PRIVATE_MARK, hasProjectLink, linkLabel } from '../lib/projects'
-
-// Categories are read from each project's tags; first match wins.
-const CATEGORIES = [
-  { key: 'ai', label: 'AI', match: /^(ai|mediapipe|machine learning|computer vision)$/i },
-  { key: 'design', label: 'UI/UX', match: /^(ui\/ux|prototype|figma)$/i },
-  { key: 'mobile', label: 'Mobile', match: /^(mobile|flutter|dart)$/i },
-  { key: 'web', label: 'Web', match: /^(web|javascript|react|next\.js|responsive design)$/i },
-]
-
-function categoryOf(project) {
-  const tags = project.tech || []
-  return CATEGORIES.find((c) => tags.some((t) => c.match.test(t))) || CATEGORIES.at(-1)
-}
+import { CATEGORIES, PRIVATE_MARK, categoryOf, hasProjectLink, linkLabel } from '../lib/projects'
 
 function ProjectCard({ project, featured, index }) {
   const category = categoryOf(project)
