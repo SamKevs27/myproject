@@ -25,33 +25,37 @@ function walkSheet() {
   return canvas.toDataURL('image/png')
 }
 
-function FormalPreview({ name, role }) {
+/* ---- card faces: each one an object from its own world ---- */
+
+// Formal: a paper business card with letterpress type and a foil rule.
+function FormalFace({ name, role }) {
   return (
-    <div className="ch-preview ch-preview-formal" aria-hidden="true">
-      <div className="ch-formal-head">
-        <img src={portrait} alt="" />
-        <div>
-          <p className="ch-formal-name">{name}</p>
-          <p className="ch-formal-role">{role}</p>
-        </div>
-      </div>
-      <p className="ch-formal-nav">About&ensp;Skills&ensp;Projects&ensp;Experience&ensp;Contact</p>
+    <div className="ch-face ch-face-formal" aria-hidden="true">
+      <span className="cf-mono">SKL</span>
+      <span className="cf-photo"><img src={portrait} alt="" /></span>
+      <span className="cf-rule" />
+      <span className="cf-name">{name}</span>
+      <span className="cf-role">{role}</span>
     </div>
   )
 }
 
-function FunPreview({ word }) {
+// Fun: a holographic neon card behind glass.
+function FunFace({ word }) {
   return (
-    <div className="ch-preview ch-preview-fun" aria-hidden="true">
-      <span className="ch-fun-bar ch-fun-bar-a" />
-      <span className="ch-fun-bar ch-fun-bar-b" />
-      {/* data-text feeds the cyan/magenta copies that slice during a glitch */}
-      <p className="ch-fun-word" data-text={word}>{word}</p>
+    <div className="ch-face ch-face-fun" aria-hidden="true">
+      <span className="cn-holo" />
+      <span className="cn-sign">サミュエル</span>
+      <span className="cn-word" data-text={word}>{word}</span>
+      <span className="cn-bar cn-bar-a" />
+      <span className="cn-bar cn-bar-b" />
+      <span className="cn-chip">NEON EDITION</span>
     </div>
   )
 }
 
-function JourneyPreview() {
+// Journey: an 8-bit game cartridge with a pixel-art label.
+function JourneyFace() {
   const art = useMemo(() => ({
     hero: spriteDataUrl(characterFrames(HERO).idle),
     walk: walkSheet(),
@@ -59,12 +63,16 @@ function JourneyPreview() {
     cloud: spriteDataUrl(CLOUD),
   }), [])
   return (
-    <div className="ch-preview ch-preview-journey" aria-hidden="true">
-      <img className="ch-cloud" src={art.cloud} alt="" />
-      <p className="ch-journey-start">▶ START</p>
-      <img className="ch-sam" src={art.sam} alt="" />
-      <span className="ch-hero" style={{ '--idle': `url(${art.hero})`, '--walk': `url(${art.walk})` }} />
-      <span className="ch-ground" />
+    <div className="ch-face ch-face-journey" aria-hidden="true">
+      <span className="cc-grip" />
+      <span className="cc-label">
+        <span className="cc-title">JOURNEY</span>
+        <img className="cc-cloud" src={art.cloud} alt="" />
+        <img className="cc-sam" src={art.sam} alt="" />
+        <span className="cc-hero" style={{ '--idle': `url(${art.hero})`, '--walk': `url(${art.walk})` }} />
+        <span className="cc-ground" />
+      </span>
+      <span className="cc-arrow">▼</span>
     </div>
   )
 }
@@ -133,19 +141,19 @@ export default function ChooserPage() {
       id: 'formal', path: FORMAL_PATH, title: 'Formal',
       text: 'Straight to the point. Clean and quick to read.',
       intro: 'A clean, quick read of my work.',
-      preview: <FormalPreview name={name} role={role} />,
+      face: <FormalFace name={name} role={role} />,
     },
     {
       id: 'fun', path: FUN_PATH, title: 'Fun',
       text: 'Neon, animated and full of little surprises.',
       intro: 'Neon, motion and a few surprises.',
-      preview: <FunPreview word={home.heroDisplayName || name.split(' ')[0]} />,
+      face: <FunFace word={home.heroDisplayName || name.split(' ')[0]} />,
     },
     {
       id: 'journey', path: JOURNEY_PATH, title: 'Journey',
       text: 'Play through my portfolio as an 8-bit game.',
       intro: 'Play through my portfolio as an 8\u2011bit game.',
-      preview: <JourneyPreview />,
+      face: <JourneyFace />,
     },
   ]
   const current = views.find((v) => v.id === chosen)
@@ -197,6 +205,23 @@ export default function ChooserPage() {
     setLayers([])
   }
 
+  // cards lean toward the cursor, with a glare that follows it
+  const tilt = (e) => {
+    if (prefersReducedMotion() || e.pointerType !== 'mouse') return
+    const card = e.currentTarget.querySelector('.ch-card')
+    const r = card.getBoundingClientRect()
+    const px = (e.clientX - r.left) / r.width
+    const py = (e.clientY - r.top) / r.height
+    card.style.setProperty('--ry', `${(px - 0.5) * 16}deg`)
+    card.style.setProperty('--rx', `${(0.5 - py) * 12}deg`)
+    card.style.setProperty('--gx', `${px * 100}%`)
+    card.style.setProperty('--gy', `${py * 100}%`)
+  }
+  const resetTilt = (e) => {
+    const card = e.currentTarget.querySelector('.ch-card')
+    for (const v of ['--rx', '--ry', '--gx', '--gy']) card.style.removeProperty(v)
+  }
+
   const getStarted = () => { if (current) switchView(navigate, current?.path, current?.id) }
 
   return (
@@ -231,10 +256,8 @@ export default function ChooserPage() {
             style={{ '--float': `${2.9 + i * 0.45}s`, '--delay': `${-i * 1.3}s` }}
           >
             <div className="ch-float">
-              {view.id === 'journey' && <Twigs active={hovered === 'journey'} />}
               <a
-                ref={(el) => { cardRefs.current[view.id] = el }}
-                className={`ch-card ch-card-${view.id}`}
+                className={`ch-pick ch-pick-${view.id}`}
                 href={view.path}
                 onClick={(e) => {
                   if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return // new-tab clicks go straight there
@@ -242,13 +265,20 @@ export default function ChooserPage() {
                   choose(view)
                 }}
                 onPointerEnter={() => setHovered(view.id)}
-                onPointerLeave={() => setHovered(null)}
+                onPointerLeave={(e) => { setHovered(null); resetTilt(e) }}
+                onPointerMove={tilt}
                 onFocus={() => setHovered(view.id)}
                 onBlur={() => setHovered(null)}
                 aria-label={`${view.title}: ${view.text}`}
               >
-                {view.preview}
-                <span className="ch-body">
+                <span className="ch-object">
+                  {view.id === 'journey' && <Twigs active={hovered === 'journey'} />}
+                  <span ref={(el) => { cardRefs.current[view.id] = el }} className={`ch-card ch-card-${view.id}`}>
+                    {view.face}
+                    <span className="ch-glare" />
+                  </span>
+                </span>
+                <span className="ch-caption">
                   <span className="ch-title">{view.title}</span>
                   <span className="ch-text">{view.text}</span>
                 </span>

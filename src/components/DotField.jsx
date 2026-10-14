@@ -2,14 +2,15 @@ import { useEffect, useRef } from 'react'
 import { prefersReducedMotion } from '../hooks/useInView'
 
 const SPACING = 34 // px between grid dots
-const REACH = 170 // px around the tracked ball that dots react to
-const TRAIL_MS = 650 // how long the motion trail lingers
+const REACH = 190 // px around the tracked ball that dots react to
+const TRAIL_MS = 900 // how long the motion trail lingers
 const IDLE_MS = 2500 // after this long without the pointer, the autopilot takes over
 const GLOW_BUCKETS = 8 // dots are batched by brightness so each frame draws only a few paths
 
 /**
- * Full-screen motion-capture floor: a grid of dots that springs away from a
- * glowing ball following the cursor, with a fading motion trail. Clicks send a
+ * Full-screen motion-capture floor: a grid of dots that breathes in a slow
+ * wave, swirls around a glowing ball following the cursor and gets dragged
+ * along with its movement, with a fading motion trail. Clicks send a
  * ripple through the grid; with no pointer around, the ball drifts in a slow
  * figure-eight on its own.
  */
@@ -29,7 +30,7 @@ export default function DotField({ className = '' }) {
     let last = 0
 
     const pointer = { x: 0, y: 0, last: -Infinity }
-    const ball = { x: 0, y: 0, strength: 0.4 }
+    const ball = { x: 0, y: 0, vx: 0, vy: 0, strength: 0.4 }
     const trail = []
     const ripples = []
 
@@ -64,9 +65,13 @@ export default function DotField({ className = '' }) {
       // autopilot: a slow figure-eight
       const tx = live ? pointer.x : width * (0.5 + 0.34 * Math.sin(t * 0.42))
       const ty = live ? pointer.y : height * (0.45 + 0.22 * Math.sin(t * 0.84 + 1.2))
-      const follow = live ? 0.32 : 0.035
-      ball.x += (tx - ball.x) * follow
-      ball.y += (ty - ball.y) * follow
+      const follow = live ? 0.22 : 0.035
+      const nx = ball.x + (tx - ball.x) * follow
+      const ny = ball.y + (ty - ball.y) * follow
+      ball.vx = nx - ball.x
+      ball.vy = ny - ball.y
+      ball.x = nx
+      ball.y = ny
       ball.strength += ((live ? 1 : 0.45) - ball.strength) * 0.05
 
       trail.push({ x: ball.x, y: ball.y, at: now })
@@ -79,15 +84,19 @@ export default function DotField({ className = '' }) {
       while (ripples.length && ripples[0].life <= 0) ripples.shift()
 
       for (const d of dots) {
-        const dx = d.bx - ball.x
-        const dy = d.by - ball.y
+        // the floor breathes: every rest point drifts on a slow travelling wave
+        const restX = d.bx + Math.sin(d.by * 0.011 + t * 0.7) * 5 + Math.cos(d.bx * 0.008 - t * 0.45) * 3
+        const restY = d.by + Math.cos(d.bx * 0.012 + t * 0.6) * 5 + Math.sin(d.by * 0.009 - t * 0.5) * 3
+        const dx = d.x - ball.x
+        const dy = d.y - ball.y
         const dist = Math.hypot(dx, dy) || 1
         let near = 0
         if (dist < REACH) {
           near = 1 - dist / REACH
-          const push = near * near * 3.2 * ball.strength
-          d.vx += (dx / dist) * push
-          d.vy += (dy / dist) * push
+          const k = near * near * ball.strength
+          // part around the ball, swirl like water, and get dragged along its path
+          d.vx += (dx / dist) * k * 1.6 + (-dy / dist) * k * 1.8 + ball.vx * k * 0.35
+          d.vy += (dy / dist) * k * 1.6 + (dx / dist) * k * 1.8 + ball.vy * k * 0.35
         }
         for (const rp of ripples) {
           const rx = d.bx - rp.x
@@ -100,11 +109,13 @@ export default function DotField({ className = '' }) {
             d.vy += (ry / rd) * push
           }
         }
-        d.vx = (d.vx + (d.bx - d.x) * 0.07) * 0.82
-        d.vy = (d.vy + (d.by - d.y) * 0.07) * 0.82
+        // soft spring back + light damping, so they flow and settle in ripples
+        d.vx = (d.vx + (restX - d.x) * 0.035) * 0.9
+        d.vy = (d.vy + (restY - d.y) * 0.035) * 0.9
         d.x += d.vx
         d.y += d.vy
-        d.glow = Math.min(1, Math.hypot(d.x - d.bx, d.y - d.by) / 16 + near * 0.55 * ball.strength)
+        const speed = Math.hypot(d.vx, d.vy)
+        d.glow = Math.min(1, speed / 3 + near * 0.5 * ball.strength)
       }
     }
 
@@ -133,15 +144,18 @@ export default function DotField({ className = '' }) {
         ctx.stroke()
       }
 
-      // motion trail: thin and faint at the tail, bright at the head
+      // motion trail: a smooth curve, thin and faint at the tail, bright at the head
       ctx.lineCap = 'round'
-      for (let i = 1; i < trail.length; i++) {
+      for (let i = 2; i < trail.length; i++) {
         const k = i / trail.length
-        ctx.strokeStyle = `rgba(183, 156, 255, ${k * 0.75 * ball.strength})`
-        ctx.lineWidth = 0.5 + k * 2.5
+        const a = trail[i - 2]
+        const b = trail[i - 1]
+        const c = trail[i]
+        ctx.strokeStyle = `rgba(183, 156, 255, ${k * 0.7 * ball.strength})`
+        ctx.lineWidth = 0.5 + k * 3
         ctx.beginPath()
-        ctx.moveTo(trail[i - 1].x, trail[i - 1].y)
-        ctx.lineTo(trail[i].x, trail[i].y)
+        ctx.moveTo((a.x + b.x) / 2, (a.y + b.y) / 2)
+        ctx.quadraticCurveTo(b.x, b.y, (b.x + c.x) / 2, (b.y + c.y) / 2)
         ctx.stroke()
       }
 

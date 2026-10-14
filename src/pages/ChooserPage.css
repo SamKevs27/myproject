@@ -71,11 +71,12 @@ html[data-view='chooser'] body {
   display: none;
 }
 
-/* ---------- cards ---------- */
+/* ---------- cards: three objects from three worlds ---------- */
 .ch-cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(3, minmax(0, 280px));
+  justify-content: center;
+  gap: clamp(32px, 5vw, 76px);
   margin-block: 0;
   list-style: none;
 }
@@ -87,7 +88,6 @@ html[data-view='chooser'] body {
 /* each card drifts on its own rhythm: a soft curve with a slight sway */
 .ch-float {
   position: relative;
-  height: 100%;
   animation: chFloat var(--float, 3s) ease-in-out var(--delay, 0s) infinite;
 }
 
@@ -98,116 +98,279 @@ html[data-view='chooser'] body {
   75% { transform: translate(-1.5px, -8px) rotate(-0.35deg); }
 }
 
+.ch-pick {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+.ch-object {
+  position: relative;
+  display: block;
+  container-type: inline-size; /* everything on a card is sized in cqw */
+}
+
 .ch-card {
   position: relative;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  display: block;
+  aspect-ratio: 5 / 7;
   overflow: hidden;
-  color: inherit;
-  text-decoration: none;
-  background: #211b2e;
-  border: 1px solid var(--ch-line);
-  border-radius: 14px;
-  box-shadow: 0 24px 50px -30px rgba(0, 0, 0, 0.8);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s;
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(var(--s, 1));
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.3s;
 }
 
-.ch-card:focus-visible {
+.ch-pick:focus-visible .ch-card {
   outline: 3px solid #c9b8ff;
-  outline-offset: 4px;
+  outline-offset: 6px;
 }
 
-.ch-preview {
-  position: relative;
-  height: 220px;
-  overflow: hidden;
+.ch-face {
+  position: absolute;
+  inset: 0;
 }
 
-.ch-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  flex: 1;
-  padding: 18px 20px 22px;
+/* light glare that follows the cursor across the surface */
+.ch-glare {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(circle at var(--gx, 50%) var(--gy, 0%), rgba(255, 255, 255, 0.32), transparent 55%);
+  mix-blend-mode: soft-light;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.ch-pick:hover .ch-glare {
+  opacity: 1;
+}
+
+/* museum-style label under each object */
+.ch-caption {
+  display: block;
+  margin-top: 22px;
+  text-align: center;
 }
 
 .ch-title {
-  font-size: 1.3rem;
+  display: block;
+  font-size: 1.15rem;
   font-weight: 600;
 }
 
 .ch-text {
+  display: block;
+  max-width: 26ch;
+  margin: 0.3rem auto 0;
   color: var(--ch-muted);
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .ch-note {
-  margin-top: 2rem;
+  margin-top: 2.5rem;
   padding-bottom: 48px;
   font-size: 0.95rem;
   color: var(--ch-muted);
+  text-align: center;
 }
 
-/* ---------- hover: formal grows a little ---------- */
-.ch-card-formal:hover,
-.ch-card-formal:focus-visible {
-  transform: scale(1.05);
-  border-color: #6d5a96;
+/* ---------- formal: a paper business card ---------- */
+.ch-card-formal {
+  border-radius: 2.5cqw;
+  background:
+    radial-gradient(rgba(22, 19, 28, 0.045) 0.6px, transparent 0.9px) 0 0 / 4px 4px,
+    #fbfbfd;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 30px 60px -28px rgba(0, 0, 0, 0.8),
+    0 8px 18px -10px rgba(0, 0, 0, 0.55);
 }
 
-/* ---------- hover: fun glitches like a bad signal ----------
-   Mostly calm, then short irregular bursts: colour copies of the word slice
-   and shift sideways, the card jolts a pixel or two and flickers. */
-.ch-card-fun:hover,
-.ch-card-fun:focus-visible {
-  border-color: #ff2bd6;
-  animation: chJolt 2.4s steps(1) infinite;
+.ch-face-formal {
+  display: flex;
+  flex-direction: column;
+  padding: 9cqw 9cqw 10cqw;
+  color: #16131c;
 }
 
-@keyframes chJolt {
-  0%, 6%, 38%, 44%, 71%, 76%, 100% { transform: none; filter: none; }
-  1% { transform: translateX(-2px); filter: brightness(1.15); }
-  3% { transform: translateX(2px); }
-  39% { transform: translateX(1px); filter: brightness(0.9); }
-  72% { transform: translateX(-1px); filter: brightness(1.2) saturate(1.3); }
-  74% { transform: translateX(2px); }
+.cf-mono {
+  font-size: 4.2cqw;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #4c1d95;
 }
 
-.ch-fun-word {
-  position: relative;
+.cf-photo {
+  align-self: center;
+  width: 48cqw;
+  aspect-ratio: 1;
+  margin: auto 0;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #eeedf3;
+  box-shadow: inset 0 0 0 1px #e2dfe9;
 }
 
-.ch-fun-word::before,
-.ch-fun-word::after {
+.cf-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transform: scale(2.1);
+  transform-origin: 54% 58%;
+}
+
+/* a violet foil rule; it catches the light on hover */
+.cf-rule {
+  width: 18cqw;
+  height: 0.9cqw;
+  margin: 0 0 4.5cqw;
+  background: linear-gradient(90deg, #4c1d95, #c4b5fd, #4c1d95) 0 0 / 200% 100%;
+  transition: background-position 0.8s ease;
+}
+
+.ch-pick-formal:hover .cf-rule {
+  background-position: 100% 0;
+}
+
+/* letterpress: a white lip under the type, a faint shadow above */
+.cf-name {
+  font-size: 8.6cqw;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  text-shadow: 0 1px 0 #ffffff, 0 -1px 0 rgba(22, 19, 28, 0.12);
+}
+
+.cf-role {
+  margin-top: 2cqw;
+  font-size: 4.4cqw;
+  color: #6b6676;
+}
+
+.ch-pick-formal:hover .ch-card,
+.ch-pick-formal:focus-visible .ch-card {
+  --s: 1.05;
+}
+
+/* ---------- fun: a holographic neon card ---------- */
+.ch-card-fun {
+  background: #0c0614;
+  clip-path: polygon(7cqw 0, 100% 0, 100% calc(100% - 7cqw), calc(100% - 7cqw) 100%, 0 100%, 0 7cqw);
+  filter: drop-shadow(0 26px 34px rgba(0, 0, 0, 0.7));
+}
+
+/* neon tube border + scanlines */
+.ch-face-fun::before {
+  content: '';
+  position: absolute;
+  inset: 4cqw;
+  border: 0.7cqw solid #ff2bd6;
+  border-radius: 1.5cqw;
+  box-shadow: 0 0 2.5cqw #ff2bd6, inset 0 0 2.5cqw rgba(255, 43, 214, 0.55);
+}
+
+.ch-face-fun::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px);
+  pointer-events: none;
+}
+
+/* rainbow sheen that slides as the card tilts */
+.cn-holo {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 20%, rgba(46, 242, 255, 0.2) 36%, rgba(255, 43, 214, 0.2) 50%, rgba(255, 214, 90, 0.16) 62%, transparent 78%);
+  background-size: 220% 220%;
+  background-position: var(--gx, 30%) var(--gy, 30%);
+  mix-blend-mode: screen;
+  transition: background-position 0.2s;
+}
+
+.cn-sign {
+  position: absolute;
+  top: 12cqw;
+  right: 11cqw;
+  writing-mode: vertical-rl;
+  font-family: 'Hiragino Sans', 'Yu Gothic', 'Noto Sans JP', sans-serif;
+  font-size: 8cqw;
+  font-weight: 300;
+  color: transparent;
+  -webkit-text-stroke: 0.3cqw #2ef2ff;
+  filter: drop-shadow(0 0 1.2cqw #2ef2ff);
+}
+
+.cn-word {
+  position: absolute;
+  left: 10cqw;
+  bottom: 27cqw;
+  font-family: 'Anybody', 'Instrument Sans', sans-serif;
+  font-size: 15cqw;
+  font-weight: 800;
+  font-stretch: 118%;
+  line-height: 1;
+  color: #fdf4ff;
+  text-shadow: -0.8cqw 0 rgba(46, 242, 255, 0.7), 0.8cqw 0 rgba(255, 43, 214, 0.75), 0 0 5cqw rgba(192, 64, 255, 0.55);
+}
+
+.cn-word::before,
+.cn-word::after {
   content: attr(data-text);
   position: absolute;
   inset: 0;
   opacity: 0;
   text-shadow: none;
+  mix-blend-mode: screen;
   pointer-events: none;
 }
 
-.ch-fun-word::before {
+.cn-word::before { color: #2ef2ff; }
+.cn-word::after { color: #ff2bd6; }
+
+.cn-bar {
+  position: absolute;
+  height: 1.2cqw;
+  box-shadow: 0 0 2.5cqw currentColor;
+}
+
+.cn-bar-a { top: 22cqw; left: 10cqw; width: 34cqw; background: #ff2bd6; color: #ff2bd6; }
+.cn-bar-b { bottom: 21cqw; right: 12cqw; width: 22cqw; background: #2ef2ff; color: #2ef2ff; }
+
+.cn-chip {
+  position: absolute;
+  left: 10cqw;
+  bottom: 11cqw;
+  padding: 1.2cqw 2.4cqw;
+  font-size: 3cqw;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   color: #2ef2ff;
-  mix-blend-mode: screen;
+  border: 0.4cqw solid rgba(46, 242, 255, 0.7);
 }
 
-.ch-fun-word::after {
-  color: #ff2bd6;
-  mix-blend-mode: screen;
+/* hover: a bad signal. Calm, then short irregular bursts */
+.ch-pick-fun:hover .ch-card,
+.ch-pick-fun:focus-visible .ch-card {
+  animation: chJolt 2.4s steps(1) infinite;
 }
 
-.ch-card-fun:hover .ch-fun-word::before,
-.ch-card-fun:focus-visible .ch-fun-word::before {
-  animation: chSliceA 2.4s steps(1) infinite;
+@keyframes chJolt {
+  0%, 6%, 38%, 44%, 71%, 76%, 100% { translate: 0 0; filter: drop-shadow(0 26px 34px rgba(0, 0, 0, 0.7)); }
+  1% { translate: -2px 0; filter: drop-shadow(0 26px 34px rgba(0, 0, 0, 0.7)) brightness(1.18); }
+  3% { translate: 2px 0; }
+  39% { translate: 1px 0; filter: drop-shadow(0 26px 34px rgba(0, 0, 0, 0.7)) brightness(0.88); }
+  72% { translate: -1px 0; filter: drop-shadow(0 26px 34px rgba(0, 0, 0, 0.7)) brightness(1.2) saturate(1.3); }
+  74% { translate: 2px 0; }
 }
 
-.ch-card-fun:hover .ch-fun-word::after,
-.ch-card-fun:focus-visible .ch-fun-word::after {
-  animation: chSliceB 2.4s steps(1) infinite;
-}
+.ch-pick-fun:hover .cn-word::before { animation: chSliceA 2.4s steps(1) infinite; }
+.ch-pick-fun:hover .cn-word::after { animation: chSliceB 2.4s steps(1) infinite; }
+.ch-pick-fun:hover .cn-bar { animation: chBarSkip 2.4s steps(1) infinite; }
 
 @keyframes chSliceA {
   0%, 7%, 37%, 45%, 70%, 77%, 100% { opacity: 0; transform: none; clip-path: inset(0 0 100% 0); }
@@ -230,12 +393,6 @@ html[data-view='chooser'] body {
   75% { opacity: 1; transform: translateX(-3px); clip-path: inset(52% 0 30% 0); }
 }
 
-/* the glow bars skip during the same bursts */
-.ch-card-fun:hover .ch-fun-bar,
-.ch-card-fun:focus-visible .ch-fun-bar {
-  animation: chBarSkip 2.4s steps(1) infinite;
-}
-
 @keyframes chBarSkip {
   0%, 6%, 38%, 44%, 71%, 76%, 100% { transform: none; opacity: 1; }
   1% { transform: translateX(18px); }
@@ -244,259 +401,154 @@ html[data-view='chooser'] body {
   72% { transform: translateX(-22px) scaleX(1.3); }
 }
 
-/* a faint scan band rolls through while hovered */
-.ch-preview-fun::after {
-  content: '';
+/* ---------- journey: an 8-bit game cartridge ---------- */
+.ch-card-journey {
+  background: #9a9aa8;
+  clip-path: polygon(0 5cqw, 5cqw 0, calc(100% - 5cqw) 0, 100% 5cqw, 100% 100%, 0 100%);
+  box-shadow:
+    inset 2.4cqw 0 0 #b2b2bf,
+    inset -2.4cqw 0 0 #7d7d8d,
+    inset 0 -3.5cqw 0 #6e6e7e;
+  filter: drop-shadow(0 26px 30px rgba(0, 0, 0, 0.65));
+}
+
+.cc-grip {
+  position: absolute;
+  top: 6cqw;
+  left: 16cqw;
+  right: 16cqw;
+  height: 13cqw;
+  background: repeating-linear-gradient(to bottom, #7d7d8d 0 1.3cqw, #aeaebb 1.3cqw 2.6cqw);
+}
+
+.cc-label {
+  position: absolute;
+  top: 24cqw;
+  left: 10cqw;
+  right: 10cqw;
+  bottom: 17cqw;
+  overflow: hidden;
+  background: #5aa8f0;
+  border: 1.4cqw solid #1a1018;
+  image-rendering: pixelated;
+}
+
+.cc-title {
+  position: absolute;
+  top: 6cqw;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  text-align: center;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6.6cqw;
+  color: #f8c838;
+  text-shadow: 0.8cqw 0.8cqw 0 #1a1018;
+}
+
+.cc-cloud {
+  position: absolute;
+  top: 19cqw;
+  left: 6cqw;
+  width: 28cqw;
+  image-rendering: pixelated;
+}
+
+.cc-ground {
   position: absolute;
   left: 0;
   right: 0;
-  height: 18%;
-  top: -20%;
-  background: rgba(253, 244, 255, 0.05);
-  pointer-events: none;
+  bottom: 0;
+  height: 13cqw;
+  background: #b8682a;
+  border-top: 2.6cqw solid #3fae3a;
 }
 
-.ch-card-fun:hover .ch-preview-fun::after,
-.ch-card-fun:focus-visible .ch-preview-fun::after {
-  animation: chScan 2.4s linear infinite;
+.cc-sam,
+.cc-hero {
+  position: absolute;
+  bottom: 13cqw;
+  width: 14cqw;
+  height: 21cqw;
+  image-rendering: pixelated;
 }
 
-@keyframes chScan {
-  to { top: 110%; }
+.cc-sam {
+  right: 14cqw;
+  transform: scaleX(-1);
 }
 
-/* ---------- hover: journey sprouts twigs from behind the card ---------- */
+.cc-hero {
+  left: 14cqw;
+  background: var(--idle) 0 0 / 14cqw 21cqw no-repeat;
+}
+
+.ch-pick-journey:hover .cc-hero,
+.ch-pick-journey:focus-visible .cc-hero {
+  background: var(--walk) 0 0 / 56cqw 21cqw no-repeat;
+  animation: chWalkFrames 0.4s steps(4) infinite, chWalkMove 1.6s steps(16) forwards;
+}
+
+@keyframes chWalkFrames {
+  to { background-position: -56cqw 0; }
+}
+
+@keyframes chWalkMove {
+  to { transform: translateX(16cqw); }
+}
+
+.cc-arrow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5cqw;
+  text-align: center;
+  font-size: 5cqw;
+  color: #707080;
+  text-shadow: 0 1px 0 #b2b2bf;
+}
+
+/* twigs that sprout from behind the cartridge */
 .ch-twigs {
   position: absolute;
   pointer-events: none;
   image-rendering: pixelated;
 }
 
-.ch-twigs-back {
-  z-index: 0;
-}
-
-.ch-twigs-front {
-  z-index: 2;
-}
-
-.ch-card-journey:hover,
-.ch-card-journey:focus-visible {
-  border-color: #3fae3a;
-}
-
-/* ---------- previews ---------- */
-.ch-preview-formal {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 18px;
-  padding: 0 24px;
-  color: #16131c;
-  background: #ffffff;
-}
-
-.ch-formal-head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.ch-formal-head img {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: 54% 32%;
-  background: #f1f0f4;
-}
-
-.ch-formal-name {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.ch-formal-role {
-  margin: 0.1rem 0 0;
-  font-size: 0.9rem;
-  color: #6b6676;
-}
-
-.ch-formal-nav {
-  margin: 0;
-  padding-top: 14px;
-  border-top: 1px solid #e9e7ee;
-  font-size: 0.8rem;
-  color: #4c1d95;
-}
-
-.ch-preview-fun {
-  display: grid;
-  place-items: center;
-  background:
-    repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.25) 0 1px, transparent 1px 3px),
-    #0c0614;
-}
-
-.ch-fun-word {
-  margin: 0;
-  font-family: 'Anybody', 'Instrument Sans', sans-serif;
-  font-size: clamp(2.6rem, 4.4vw, 3.6rem);
-  font-weight: 800;
-  font-stretch: 125%;
-  color: #fdf4ff;
-  text-shadow: -4px 0 rgba(46, 242, 255, 0.7), 4px 0 rgba(255, 43, 214, 0.75), 0 0 30px rgba(192, 64, 255, 0.5);
-}
-
-.ch-fun-bar {
-  position: absolute;
-  height: 4px;
-  box-shadow: 0 0 12px currentColor;
-}
-
-.ch-fun-bar-a { top: 28%; left: 8%; width: 30%; background: #ff2bd6; color: #ff2bd6; }
-.ch-fun-bar-b { bottom: 24%; right: 10%; width: 22%; background: #2ef2ff; color: #2ef2ff; }
-
-.ch-preview-journey {
-  background: #5aa8f0;
-  image-rendering: pixelated;
-}
-
-.ch-cloud {
-  position: absolute;
-  top: 26px;
-  left: 18%;
-  width: 96px;
-  image-rendering: pixelated;
-}
-
-.ch-journey-start {
-  position: absolute;
-  top: 74px;
-  left: 0;
-  right: 0;
-  margin: 0;
-  text-align: center;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 13px;
-  color: #f8c838;
-  text-shadow: 3px 3px 0 #1a1018;
-}
-
-.ch-ground {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 48px;
-  background: #b8682a;
-  border-top: 8px solid #3fae3a;
-  box-shadow: inset 0 4px 0 #1c7a30;
-}
-
-.ch-sam,
-.ch-hero {
-  position: absolute;
-  bottom: 48px;
-  width: 48px;
-  height: 72px;
-  image-rendering: pixelated;
-}
-
-.ch-sam {
-  left: calc(50% + 24px);
-  transform: scaleX(-1);
-}
-
-.ch-hero {
-  left: calc(50% - 88px);
-  background: var(--idle) 0 0 / 48px 72px no-repeat;
-}
-
-.ch-card-journey:hover .ch-hero,
-.ch-card-journey:focus-visible .ch-hero {
-  background: var(--walk) 0 0 / 192px 72px no-repeat;
-  animation: chWalkFrames 0.4s steps(4) infinite, chWalkMove 1.6s steps(16) forwards;
-}
-
-@keyframes chWalkFrames {
-  to { background-position: -192px 0; }
-}
-
-@keyframes chWalkMove {
-  to { transform: translateX(48px); }
-}
+.ch-twigs-back { z-index: 0; }
+.ch-twigs-front { z-index: 2; }
 
 /* ---------- docked: the cards you didn't pick, small along the bottom ---------- */
 .ch-cards.is-docked {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 20px;
+  bottom: 18px;
   z-index: 4;
   display: flex;
   justify-content: center;
-  gap: 18px;
+  gap: 28px;
   max-width: none;
 }
 
 .is-docked .ch-item {
-  width: 210px;
+  width: 120px;
 }
 
-.is-docked .ch-item.is-hidden,
 .ch-item.is-hidden {
   display: none;
 }
 
-.is-docked .ch-preview {
-  height: 92px;
-}
-
-.is-docked .ch-body {
-  padding: 10px 14px 12px;
+.is-docked .ch-caption {
+  margin-top: 10px;
 }
 
 .is-docked .ch-title {
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .is-docked .ch-text {
   display: none;
-}
-
-.is-docked .ch-formal-head img,
-.is-docked .ch-formal-nav,
-.is-docked .ch-formal-role,
-.is-docked .ch-journey-start,
-.is-docked .ch-cloud {
-  display: none;
-}
-
-.is-docked .ch-formal-name {
-  font-size: 0.95rem;
-}
-
-.is-docked .ch-fun-word {
-  font-size: 1.8rem;
-}
-
-.is-docked .ch-sam,
-.is-docked .ch-hero {
-  bottom: 24px;
-  width: 32px;
-  height: 48px;
-}
-
-.is-docked .ch-hero {
-  background-size: 32px 48px;
-}
-
-.is-docked .ch-ground {
-  height: 24px;
-  border-top-width: 4px;
 }
 
 /* ---------- the chosen world, growing out of the card ---------- */
@@ -605,7 +657,7 @@ html[data-view='chooser'] body {
 /* ---------- the intro + Get started, styled per world ---------- */
 .ch-intro {
   position: fixed;
-  inset: 0 0 170px;
+  inset: 0 0 250px;
   z-index: 3;
   display: flex;
   flex-direction: column;
@@ -809,42 +861,21 @@ html[data-view='chooser'] body {
 /* ---------- phones: stacked menu, smaller dock ---------- */
 @media (max-width: 860px) {
   .ch-cards {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .ch-preview {
-    height: 190px;
-  }
-
-  .ch-journey-start {
-    top: 34px;
-    left: auto;
-    right: 20px;
-    text-align: right;
-  }
-
-  .ch-cloud {
-    top: 20px;
-    left: 20px;
+    grid-template-columns: minmax(0, 260px);
+    gap: 48px;
   }
 
   .ch-cards.is-docked {
-    gap: 12px;
+    gap: 18px;
     bottom: 14px;
-    padding-inline: 14px;
   }
 
   .is-docked .ch-item {
-    width: calc(50% - 6px);
-    max-width: 200px;
-  }
-
-  .is-docked .ch-preview {
-    height: 72px;
+    width: 92px;
   }
 
   .ch-intro {
-    inset: 0 0 150px;
+    inset: 0 0 200px;
   }
 }
 
