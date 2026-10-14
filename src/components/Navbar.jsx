@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
+import { FUN_PATH, funSection } from '../lib/routes'
+import { switchView } from '../lib/switchView'
 
 const NAV_LINKS = [
   { label: 'About', sectionId: 'about' },
@@ -35,7 +37,7 @@ export default function Navbar() {
   const progressRef = useRef(null)
   const location = useLocation()
   const navigate = useNavigate()
-  const onHome = location.pathname === '/'
+  const onHome = location.pathname === FUN_PATH
   const active = onHome ? activeSection : ''
 
   // Track the current section and scroll progress from the scroll position.
@@ -101,12 +103,18 @@ export default function Navbar() {
     }
   }, [open])
 
+  const toFormal = (e) => {
+    e.preventDefault()
+    setOpen(false)
+    switchView(navigate, '/', 'formal')
+  }
+
   // Always scroll on click, even when the hash is already the same.
   const goTo = (e, sectionId) => {
     e.preventDefault()
     setOpen(false)
     if (!onHome) {
-      navigate(sectionId ? `/#${sectionId}` : '/')
+      navigate(funSection(sectionId))
       return
     }
     if (sectionId) {
@@ -114,7 +122,7 @@ export default function Navbar() {
       window.history.replaceState(null, '', `#${sectionId}`)
     } else {
       window.scrollTo({ top: 0, behavior: 'smooth' })
-      window.history.replaceState(null, '', '/')
+      window.history.replaceState(null, '', FUN_PATH)
     }
   }
 
@@ -122,14 +130,14 @@ export default function Navbar() {
     <nav className={`navbar${open ? ' is-open' : ''}`} aria-label="Main">
       <span className="scroll-progress" ref={progressRef} aria-hidden="true" />
       <div className="navbar-inner">
-        <a href="/" className="navbar-logo" onClick={(e) => goTo(e, '')}>SKL</a>
+        <a href={FUN_PATH} className="navbar-logo" onClick={(e) => goTo(e, '')}>SKL</a>
 
         <ul className="navbar-links" ref={listRef}>
           <span className="nav-pill" ref={pillRef} aria-hidden="true" />
           {NAV_LINKS.map((l, i) => (
             <li key={l.sectionId} style={{ '--i': i }}>
               <a
-                href={`/#${l.sectionId}`}
+                href={funSection(l.sectionId)}
                 ref={(el) => { linkRefs.current[l.sectionId] = el }}
                 className={active === l.sectionId ? 'nav-active' : ''}
                 aria-current={active === l.sectionId ? 'true' : undefined}
@@ -139,11 +147,17 @@ export default function Navbar() {
               </a>
             </li>
           ))}
+          <li className="nav-formal-item" style={{ '--i': NAV_LINKS.length }}>
+            <a href="/" onClick={toFormal}>Formal view</a>
+          </li>
         </ul>
 
-        {home.cvUrl && (
-          <a href={home.cvUrl} target="_blank" rel="noreferrer" className="navbar-cv">Download CV</a>
-        )}
+        <div className="navbar-actions">
+          <a href="/" className="navbar-formal" onClick={toFormal}>Formal view</a>
+          {home.cvUrl && (
+            <a href={home.cvUrl} target="_blank" rel="noreferrer" className="navbar-cv">Download CV</a>
+          )}
+        </div>
 
         <button
           type="button"

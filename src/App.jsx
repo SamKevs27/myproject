@@ -5,6 +5,8 @@ import Footer from './components/Footer'
 import MotionLayer from './components/MotionLayer'
 import GlitchOverlay from './components/GlitchOverlay'
 import HomePage from './pages/HomePage'
+import FormalPage from './pages/FormalPage'
+import { FUN_PATH } from './lib/routes'
 import { PortfolioContentProvider } from './context/PortfolioContentContext'
 import './App.css'
 
@@ -23,7 +25,7 @@ function ScrollToHash() {
   const location = useLocation()
 
   useEffect(() => {
-    if (location.pathname !== '/') return undefined
+    if (location.pathname !== '/' && location.pathname !== FUN_PATH) return undefined
 
     const id = location.hash.slice(1)
     if (!id || id === 'hero') {
@@ -46,6 +48,7 @@ function ScrollToHash() {
   return null
 }
 
+// Old per-section URLs (/about, /projects…) now land on the formal page's section.
 function LegacySectionRedirect() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -55,30 +58,37 @@ function LegacySectionRedirect() {
     navigate(sectionId ? `/#${sectionId}` : '/', { replace: true })
   }, [location.pathname, navigate])
 
-  return <HomePage />
+  return null
 }
 
-// Must be inside BrowserRouter to use useLocation
-function AppShell() {
+// The neon site: pointer effects, glitch overlay, navbar and footer.
+function FunShell({ children }) {
   const location = useLocation()
   return (
     <div className="app-shell">
-      <ScrollToHash />
       <MotionLayer />
       <GlitchOverlay />
       <Navbar />
       <main className="app-main">
         {/* key change re-mounts the div, re-triggering the CSS enter animation */}
-        <div className="page-transition" key={location.pathname}>
-          <Routes location={location}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/admin" element={<Suspense fallback={null}><Admin /></Suspense>} />
-            <Route path="*" element={<LegacySectionRedirect />} />
-          </Routes>
-        </div>
+        <div className="page-transition" key={location.pathname}>{children}</div>
       </main>
       <Footer />
     </div>
+  )
+}
+
+function AppRoutes() {
+  return (
+    <>
+      <ScrollToHash />
+      <Routes>
+        <Route path="/" element={<FormalPage />} />
+        <Route path={FUN_PATH} element={<FunShell><HomePage /></FunShell>} />
+        <Route path="/admin" element={<FunShell><Suspense fallback={null}><Admin /></Suspense></FunShell>} />
+        <Route path="*" element={<LegacySectionRedirect />} />
+      </Routes>
+    </>
   )
 }
 
@@ -86,7 +96,7 @@ function App() {
   return (
     <BrowserRouter>
       <PortfolioContentProvider>
-        <AppShell />
+        <AppRoutes />
       </PortfolioContentProvider>
     </BrowserRouter>
   )

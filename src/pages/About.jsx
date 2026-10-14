@@ -8,12 +8,13 @@ import CountUp from '../components/CountUp'
 import { prefersReducedMotion, useInView } from '../hooks/useInView'
 import SectionBackground from '../components/SectionBackground'
 import ScrambleText from '../components/ScrambleText'
+import { funSection } from '../lib/routes'
 
 const SECTION_PATHS = new Set(['/about', '/skills', '/projects', '/experience', '/contact'])
 
 function toSectionLink(to, fallback) {
   const target = to || fallback
-  return SECTION_PATHS.has(target) ? `/#${target.slice(1)}` : target
+  return SECTION_PATHS.has(target) ? funSection(target.slice(1)) : target
 }
 
 export default function About() {
@@ -59,7 +60,7 @@ export default function About() {
               </div>
             ))}
           </div>
-          <Link to="/#projects" className="pose-note">This is how my thesis sees dancers</Link>
+          <Link to={funSection('projects')} className="pose-note">This is how my thesis sees dancers</Link>
         </div>
         <div ref={textRef} className={`about-text-col rise-group${textInView ? ' is-in' : ''}`}>
           <ScrambleText className="section-label" text={about.sectionLabel || ''} />

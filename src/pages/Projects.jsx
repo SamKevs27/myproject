@@ -4,8 +4,7 @@ import StretchText from '../components/StretchText'
 import ProjectGlyph from '../components/ProjectGlyph'
 import { useInView } from '../hooks/useInView'
 import SectionBackground from '../components/SectionBackground'
-
-const PRIVATE_MARK = /\s*\(classified\)\s*$/i
+import { PRIVATE_MARK, hasProjectLink, linkLabel } from '../lib/projects'
 
 // Categories are read from each project's tags; first match wins.
 const CATEGORIES = [
@@ -18,18 +17,6 @@ const CATEGORIES = [
 function categoryOf(project) {
   const tags = project.tech || []
   return CATEGORIES.find((c) => tags.some((t) => c.match.test(t))) || CATEGORIES.at(-1)
-}
-
-function hasProjectLink(link = '') {
-  const value = link.trim()
-  return Boolean(value) && value !== '#'
-}
-
-// Name the link by what it opens, so visitors know what they'll get.
-function linkLabel(link) {
-  if (/github\.com|gitlab\.com/i.test(link)) return 'View code'
-  if (/figma\.com/i.test(link)) return 'View prototype'
-  return 'Visit site'
 }
 
 function ProjectCard({ project, featured, index }) {

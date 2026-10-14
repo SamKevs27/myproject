@@ -5,12 +5,13 @@ import { usePortfolioContent } from '../context/PortfolioContentContext'
 import StretchText from '../components/StretchText'
 import HeroBackground from '../components/HeroBackground'
 import { prefersReducedMotion } from '../hooks/useInView'
+import { funSection } from '../lib/routes'
 
 const SECTION_PATHS = new Set(['/about', '/skills', '/projects', '/experience', '/contact'])
 
 function toSectionLink(to, fallback) {
   const target = to || fallback
-  return SECTION_PATHS.has(target) ? `/#${target.slice(1)}` : target
+  return SECTION_PATHS.has(target) ? funSection(target.slice(1)) : target
 }
 
 // Letters within this many px of the cursor widen and thicken.
