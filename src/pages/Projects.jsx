@@ -7,7 +7,8 @@ function hasProjectLink(link = '') {
 }
 
 export default function Projects() {
-  const { projects } = usePortfolioContent()
+  const { projects: items } = usePortfolioContent()
+  const projects = [...items].sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999))
   const headRef = useFadeIn()
   const listRef = useFadeIn()
   return (

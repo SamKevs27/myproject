@@ -900,7 +900,7 @@ function AdminEditor({ user }) {
 
         <RecommendedUpdatesBanner
           content={{ home, about, contact, skillsPage, projects, experience }}
-          api={{ updateSingleton, updateListItem }}
+          api={{ updateSingleton, createListItem, updateListItem }}
           disabled={disabled || anyDirty}
           onApplied={() => setRevision((r) => r + 1)}
         />

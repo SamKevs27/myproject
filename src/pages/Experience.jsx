@@ -39,7 +39,8 @@ function ExpGroup({ title, items }) {
 }
 
 export default function Experience() {
-  const { experience } = usePortfolioContent()
+  const { experience: items } = usePortfolioContent()
+  const experience = [...items].sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999))
   const headRef = useFadeIn()
   const work = experience.filter((e) => e.type !== 'education')
   const education = experience.filter((e) => e.type === 'education')
