@@ -38,11 +38,20 @@ Use these collections/documents:
 
 ## 4. Editing content
 
-- Open `/admin`
-- Use JSON editors for singleton docs: Home, About, Contact
-- Use list editors for Skills, Projects, Experience to create/update/delete items
+- Open `/admin` and sign in with Google (only `VITE_ADMIN_EMAIL` is allowed)
+- Each tab (Home, About, Skills, Projects, Experience, Contact) is a form; click **Save** to publish
+- Project screenshots: drop images in `public/projects/` and enter `/projects/<file>.png` in the project's Screenshot field
+- CV: paste a link in Home → "CV / résumé link" to show a Download CV button
 
-## 5. Important security note
+## 5. Admin sign-in and security (one-time setup)
 
-`/admin` is currently UI-only and has no authentication guard yet.
-Before production, protect writes with Firebase Auth + Firestore security rules.
+1. Firebase Console → **Authentication** → Sign-in method → enable **Google**
+2. Authentication → Settings → **Authorized domains** → add your live domain
+3. Firestore Database → **Rules** → paste `firestore.rules` → Publish
+
+Reads are public; writes are only allowed for the admin Google account.
+
+## 6. Link previews
+
+Set `VITE_SITE_URL` in `.env` (and in your hosting provider's env vars) to your live URL, e.g. `https://samuelkevin.dev`.
+This makes the `og:image` absolute so LinkedIn/WhatsApp show the preview card in `public/og-image.png`.

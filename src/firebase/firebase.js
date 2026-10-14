@@ -1,5 +1,4 @@
 import { initializeApp } from 'firebase/app'
-import { getAnalytics } from 'firebase/analytics'
 import { initializeFirestore } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -14,31 +13,22 @@ const firebaseConfig = {
 
 export const hasFirebaseConfig = Object.values(firebaseConfig).every(Boolean)
 
-console.log('Do we have the map?', hasFirebaseConfig)
-
+let app = null
 let db = null
-let analytics = null
 
 if (hasFirebaseConfig) {
-  const app = initializeApp(firebaseConfig)
+  app = initializeApp(firebaseConfig)
 
   db = initializeFirestore(app, {
     useFetchStreams: false, // disables the persistent long-polling channel
   })
 
+  // Analytics is loaded lazily so it stays out of the main bundle.
   if (firebaseConfig.measurementId) {
-    analytics = getAnalytics(app)
+    import('firebase/analytics')
+      .then(({ getAnalytics, isSupported }) => isSupported().then((ok) => ok && getAnalytics(app)))
+      .catch(() => {})
   }
-
-  // Quick one-time connection test — safe to remove once you've confirmed it works
-  import('firebase/firestore').then(async ({ collection, getDocs }) => {
-    try {
-      const snap = await getDocs(collection(db, 'your-collection-name'))
-      console.log('✅ Connected to Firestore! Number of docs found:', snap.size)
-    } catch (err) {
-      console.error('❌ Firestore error:', err.code, err.message)
-    }
-  })
 }
 
-export { analytics, db }
+export { app, db }

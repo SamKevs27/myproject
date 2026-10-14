@@ -21,17 +21,27 @@ export default function Projects() {
           {projects.map((p, idx) => {
             const hasLink = hasProjectLink(p.link)
 
+            const meta = [p.role, p.year].filter(Boolean).join(' · ')
+
             return (
-              <a key={p.id || p.num || idx} href={hasLink ? p.link : undefined} className={`proj-item${hasLink ? ' has-link' : ''}`}>
+              <a
+                key={p.id || p.num || idx}
+                href={hasLink ? p.link : undefined}
+                target={hasLink && /^https?:/i.test(p.link) ? '_blank' : undefined}
+                rel={hasLink ? 'noreferrer' : undefined}
+                className={`proj-item${hasLink ? ' has-link' : ''}${p.image ? ' has-image' : ''}`}
+              >
                 <span className="proj-num">{p.num}</span>
                 <div className="proj-body">
                   <h3 className="proj-title">{p.title}</h3>
+                  {meta && <p className="proj-meta">{meta}</p>}
                   <p className="proj-desc">{p.desc}</p>
                   <div className="proj-tech">
                     {(p.tech || []).map((t) => <span key={`${p.id || p.num}-${t}`} className="tech-chip">{t}</span>)}
                   </div>
                 </div>
-                <span className="proj-arrow">↗</span>
+                {p.image && <img src={p.image} alt={`${p.title} screenshot`} className="proj-thumb" loading="lazy" />}
+                <span className="proj-arrow" aria-hidden="true">{hasLink ? '↗' : ''}</span>
               </a>
             )
           })}

@@ -25,6 +25,28 @@ function buildInitialState() {
   }
 }
 
+const CACHE_KEY = 'portfolio-content-v1'
+const CONTENT_KEYS = ['home', 'about', 'contact', 'skillsPage', 'skills', 'projects', 'experience']
+
+// Last-seen content is cached so repeat visits render instantly instead of
+// flashing empty text while Firestore loads.
+function readCache() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY))
+    return cached && typeof cached === 'object' ? cached : null
+  } catch {
+    return null
+  }
+}
+
+function writeCache(state) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(Object.fromEntries(CONTENT_KEYS.map((k) => [k, state[k]]))))
+  } catch {
+    // storage unavailable (private mode, quota) — caching is best-effort
+  }
+}
+
 function updateListItemInState(items, id, payload) {
   return items.map((item) => (item.id === id ? { ...item, ...payload } : item))
 }
@@ -34,12 +56,16 @@ function deleteListItemFromState(items, id) {
 }
 
 export function PortfolioContentProvider({ children }) {
-  const [state, setState] = useState(() => ({
-    ...buildInitialState(),
-    loading: true,
-    saving: false,
-    error: '',
-  }))
+  const [state, setState] = useState(() => {
+    const cached = readCache()
+    return {
+      ...buildInitialState(),
+      ...cached,
+      loading: !cached,
+      saving: false,
+      error: '',
+    }
+  })
 
   const refreshContent = async ({ showLoading = false } = {}) => {
     if (!hasFirebaseConfig) {
@@ -53,7 +79,7 @@ export function PortfolioContentProvider({ children }) {
     }
 
     try {
-      setState((prev) => ({ ...prev, loading: showLoading, error: '' }))
+      setState((prev) => ({ ...prev, loading: prev.loading && showLoading, error: '' }))
 
       const [homeDoc, aboutDoc, contactDoc, skills, projects, experience] = await Promise.all([
         fetchContentDoc('home'),
@@ -81,7 +107,6 @@ export function PortfolioContentProvider({ children }) {
     } catch (err) {
       setState((prev) => ({
         ...prev,
-        ...buildInitialState(),
         loading: false,
         error: err?.message || 'Failed to load content from Firestore.',
       }))
@@ -91,6 +116,11 @@ export function PortfolioContentProvider({ children }) {
   useEffect(() => {
     refreshContent({ showLoading: true })
   }, [])
+
+  const { loading, home, about, contact, skillsPage, skills, projects, experience } = state
+  useEffect(() => {
+    if (!loading) writeCache({ home, about, contact, skillsPage, skills, projects, experience })
+  }, [loading, home, about, contact, skillsPage, skills, projects, experience])
 
   const updateSingleton = async (docId, payload) => {
     try {

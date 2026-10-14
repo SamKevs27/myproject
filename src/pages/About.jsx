@@ -1,4 +1,4 @@
-import portrait from '../assets/potrait.png'
+import portrait from '../assets/portrait.webp'
 import { Link } from 'react-router-dom'
 import { useFadeIn } from '../hooks/useFadeIn'
 import { usePortfolioContent } from '../context/PortfolioContentContext'

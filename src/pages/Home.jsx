@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
 import { Link } from 'react-router-dom'
-import portrait from '../assets/potrait.png'
+import portrait from '../assets/portrait.webp'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
 
 const SECTION_PATHS = new Set(['/about', '/skills', '/projects', '/experience', '/contact'])
@@ -18,6 +18,8 @@ export default function Home() {
 
   return (
     <section className="hero" id="hero">
+      {/* the giant name below is decorative (aria-hidden), so this is the real page heading */}
+      <h1 className="sr-only">{[home.barName, home.barRole].filter(Boolean).join(' — ')}</h1>
       {/* filled name — behind portrait */}
       <div className="hero-name" aria-hidden="true">
         <span>{home.heroDisplayName}</span>
@@ -55,6 +57,9 @@ export default function Home() {
         <div className="hero-bar-ctas">
           <Link to={primaryCtaTo} className="btn btn-primary">{home.primaryCta?.label || 'View Work'}</Link>
           <Link to={secondaryCtaTo} className="btn btn-outline">{home.secondaryCta?.label || 'Contact'}</Link>
+          {home.cvUrl && (
+            <a href={home.cvUrl} target="_blank" rel="noreferrer" className="btn btn-outline">Download CV</a>
+          )}
         </div>
       </div>
     </section>

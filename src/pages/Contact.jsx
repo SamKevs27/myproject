@@ -72,7 +72,7 @@ function ContactIcon({ kind }) {
 }
 
 export default function Contact() {
-  const { contact } = usePortfolioContent()
+  const { contact, home } = usePortfolioContent()
   const ref = useFadeIn()
   const titleLines = (contact.title || '').split('\n')
   const actions = contact.actions || []
@@ -104,6 +104,9 @@ export default function Contact() {
               <ContactIcon kind={getContactIconKind(primaryAction.href)} />
               <span>{primaryAction.label}</span>
             </a>
+          )}
+          {home.cvUrl && (
+            <a href={home.cvUrl} target="_blank" rel="noreferrer" className="btn btn-outline contact-cv">Download CV</a>
           )}
           {socialActions.length > 0 && (
             <div className="contact-socials stagger is-visible">

@@ -1,11 +1,13 @@
-import { useEffect } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import HomePage from './pages/HomePage'
-import Admin from './pages/Admin'
 import { PortfolioContentProvider } from './context/PortfolioContentContext'
 import './App.css'
+
+// Admin (and Firebase Auth) is split into its own chunk so visitors never download it.
+const Admin = lazy(() => import('./pages/Admin'))
 
 const LEGACY_SECTION_PATHS = {
   '/about': 'about',
@@ -62,7 +64,7 @@ function AppShell() {
         <div className="page-transition" key={location.pathname}>
           <Routes location={location}>
             <Route path="/" element={<HomePage />} />
-            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin" element={<Suspense fallback={null}><Admin /></Suspense>} />
             <Route path="*" element={<LegacySectionRedirect />} />
           </Routes>
         </div>
