@@ -4,6 +4,7 @@ import Skills from './Skills'
 import Projects from './Projects'
 import Experience from './Experience'
 import Contact from './Contact'
+import SkillsMarquee from '../components/SkillsMarquee'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
 
 export default function HomePage() {
@@ -21,6 +22,7 @@ export default function HomePage() {
   return (
     <>
       <Home />
+      <SkillsMarquee />
       <About />
       <Skills />
       <Projects />

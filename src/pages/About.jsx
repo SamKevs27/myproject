@@ -1,7 +1,12 @@
 import portrait from '../assets/portrait.webp'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useFadeIn } from '../hooks/useFadeIn'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
+import PoseTrace, { LANDMARK_COUNT } from '../components/PoseTrace'
+import StretchText from '../components/StretchText'
+import CountUp from '../components/CountUp'
+import { prefersReducedMotion, useInView } from '../hooks/useInView'
+import SectionBackground from '../components/SectionBackground'
 
 const SECTION_PATHS = new Set(['/about', '/skills', '/projects', '/experience', '/contact'])
 
@@ -12,51 +17,64 @@ function toSectionLink(to, fallback) {
 
 export default function About() {
   const { about } = usePortfolioContent()
-  const imgRef = useFadeIn()
-  const textRef = useFadeIn()
-  const statsRef = useFadeIn()
   const ctaTo = toSectionLink(about.cta?.to, '/contact')
 
-  const titleLines = (about.title || '').split('\n')
+  const [portraitRef, portraitInView] = useInView({ threshold: 0.45 })
+  const [textRef, textInView] = useInView({ threshold: 0.15 })
+  const poseRef = useRef(null)
+  const [dance, setDance] = useState({ state: 'idle', score: 0 })
+
+  // The skeleton dances, then grades itself the way the thesis grades dancers.
+  const startDance = async () => {
+    if (dance.state === 'dancing') return
+    setDance({ state: 'dancing', score: 0 })
+    if (!prefersReducedMotion()) await poseRef.current?.dance()
+    setDance({ state: 'scored', score: 86 + Math.floor(Math.random() * 14) })
+  }
 
   return (
     <section className="section page-section" id="about">
+      <SectionBackground variant="network" />
       <div className="section-inner about-inner">
         <div className="about-img-col">
-          <div ref={imgRef} className="fade-up">
+          <figure ref={portraitRef} className={`about-figure${portraitInView ? ' is-in' : ''} is-${dance.state}`}>
             <img src={portrait} alt={about.portraitAlt || 'Portrait'} className="about-portrait" />
-          </div>
-          <div ref={statsRef} className="about-stats stagger fade-up">
+            <PoseTrace ref={poseRef} active={portraitInView} height={1600} />
+            <figcaption className="pose-readout" aria-live="polite">
+              <span className="pose-live" aria-hidden="true" />
+              {dance.state === 'dancing' && 'Scoring moves…'}
+              {dance.state === 'scored' && <>Dance score <strong>{dance.score}/100</strong></>}
+              {dance.state === 'idle' && `Tracking ${LANDMARK_COUNT} landmarks`}
+            </figcaption>
+            <button type="button" className="dance-btn" onClick={startDance} disabled={dance.state === 'dancing'}>
+              {dance.state === 'scored' ? 'Again!' : 'Make it dance'}
+            </button>
+          </figure>
+          <div className={`about-stats${portraitInView ? ' is-in' : ''}`}>
             {(about.stats || []).map((stat, idx) => (
-              <div key={`${stat.label}-${idx}`} className="stat">
-                <span className="stat-num">{stat.value}</span>
+              <div key={`${stat.label}-${idx}`} className="stat" style={{ '--i': idx }}>
+                <span className="stat-num"><CountUp value={stat.value} active={portraitInView} /></span>
                 <span className="stat-label">{stat.label}</span>
               </div>
             ))}
           </div>
+          <Link to="/#projects" className="pose-note">This is how my thesis sees dancers</Link>
         </div>
-        <div className="about-text-col fade-up" ref={textRef}>
+        <div ref={textRef} className={`about-text-col rise-group${textInView ? ' is-in' : ''}`}>
           <span className="section-label">{about.sectionLabel}</span>
-          <h2 className="section-title">
-            {titleLines.map((line, idx) => (
-              <span key={`${line}-${idx}`}>
-                {idx > 0 && <br />}
-                {line}
-              </span>
-            ))}
-          </h2>
+          <StretchText as="h2" className="section-title" text={about.title || ''} />
           {(about.paragraphs || []).map((paragraph, idx) => (
-            <p key={`${idx}-${paragraph.slice(0, 20)}`} className="about-p">{paragraph}</p>
+            <p key={`${idx}-${paragraph.slice(0, 20)}`} className="about-p rise" style={{ '--i': idx + 1 }}>{paragraph}</p>
           ))}
-          <div className="about-details-row stagger fade-up is-visible">
+          <div className="about-details-row">
             {(about.details || []).map((detail, idx) => (
-              <div key={`${detail.key}-${idx}`} className="detail-chip">
+              <div key={`${detail.key}-${idx}`} className="detail-chip pop" style={{ '--i': idx + 3 }}>
                 <span className="detail-key">{detail.key}</span>
                 <span>{detail.value}</span>
               </div>
             ))}
           </div>
-          <Link to={ctaTo} className="btn btn-primary">{about.cta?.label || 'Get Started'}</Link>
+          <Link to={ctaTo} className="btn btn-primary rise" style={{ '--i': 6 }}>{about.cta?.label || 'Get Started'}</Link>
         </div>
       </div>
     </section>

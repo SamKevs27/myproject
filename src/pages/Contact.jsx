@@ -1,5 +1,8 @@
-import { useFadeIn } from '../hooks/useFadeIn'
+import { useState } from 'react'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
+import StretchText from '../components/StretchText'
+import { useInView } from '../hooks/useInView'
+import SectionBackground from '../components/SectionBackground'
 
 function isExternalLink(href = '') {
   return /^https?:\/\//i.test(href)
@@ -71,29 +74,44 @@ function ContactIcon({ kind }) {
   }
 }
 
+// Shows the address in full with a one-click copy, so nobody has to open a mail app.
+function EmailCopy({ email }) {
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(email)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      window.location.href = `mailto:${email}`
+    }
+  }
+  return (
+    <button type="button" className={`email-copy${copied ? ' is-copied' : ''}`} onClick={copy}>
+      <span className="email-copy-address">{email}</span>
+      <span className="email-copy-label" aria-live="polite">{copied ? 'Copied' : 'Copy'}</span>
+    </button>
+  )
+}
+
 export default function Contact() {
   const { contact, home } = usePortfolioContent()
-  const ref = useFadeIn()
-  const titleLines = (contact.title || '').split('\n')
+  const [actionsRef, actionsInView] = useInView({ threshold: 0.3 })
   const actions = contact.actions || []
+  const email = (actions.find((a) => /^mailto:/i.test(a.href || ''))?.href || '').replace(/^mailto:/i, '').split('?')[0]
   const primaryActionIndex = actions.findIndex((action) => action.variant === 'primary')
   const primaryAction = actions[primaryActionIndex] || actions[0] || null
   const socialActions = actions.filter((_, idx) => idx !== (primaryActionIndex >= 0 ? primaryActionIndex : 0))
 
   return (
     <section className="section page-section" id="contact">
-      <div className="section-inner contact-inner fade-up" ref={ref}>
+      <SectionBackground variant="signal" />
+      <div className="section-inner contact-inner">
         <span className="section-label">{contact.sectionLabel}</span>
-        <h2 className="section-title contact-title">
-          {titleLines.map((line, idx) => (
-            <span key={`${line}-${idx}`}>
-              {idx > 0 && <br />}
-              {line}
-            </span>
-          ))}
-        </h2>
+        <StretchText as="h2" className="section-title contact-title" text={contact.title || ''} />
         <p className="contact-sub">{contact.subtitle}</p>
-        <div className="contact-actions stagger is-visible">
+        {email && <EmailCopy email={email} />}
+        <div ref={actionsRef} className={`contact-actions${actionsInView ? ' is-in' : ''}`}>
           {primaryAction && (
             <a
               href={primaryAction.href}
@@ -109,7 +127,7 @@ export default function Contact() {
             <a href={home.cvUrl} target="_blank" rel="noreferrer" className="btn btn-outline contact-cv">Download CV</a>
           )}
           {socialActions.length > 0 && (
-            <div className="contact-socials stagger is-visible">
+            <div className="contact-socials">
               {socialActions.map((action, idx) => (
                 <a
                   key={`${action.label}-${idx}`}
@@ -117,6 +135,7 @@ export default function Contact() {
                   target={isExternalLink(action.href) ? '_blank' : undefined}
                   rel={isExternalLink(action.href) ? 'noreferrer' : undefined}
                   className="contact-social-link"
+                  style={{ '--i': idx }}
                   aria-label={action.label}
                   title={action.label}
                 >

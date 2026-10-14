@@ -1,31 +1,37 @@
-import { useFadeIn } from '../hooks/useFadeIn'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
+import StretchText from '../components/StretchText'
+import { useInView } from '../hooks/useInView'
+import SectionBackground from '../components/SectionBackground'
 
 export default function Skills() {
-  const leftRef = useFadeIn()
   const { skillsPage } = usePortfolioContent()
   const page = skillsPage || {}
+  const [tableRef, tableInView] = useInView({ threshold: 0.1 })
 
   return (
     <section className="section section-alt page-section" id="skills">
-      <div className="section-inner skills-inner skills-sections-layout">
-        <div className="skills-left fade-up is-visible" ref={leftRef}>
-          <span className="section-label">{page.sectionLabel}</span>
-          <h2 className="section-title">{page.title}</h2>
-          <p className="skills-sub">{page.subtitle}</p>
+      <SectionBackground variant="codeField" />
+      <div className="section-inner skills-layout">
+        <div className="skills-intro">
+          {page.sectionLabel && <span className="section-label">{page.sectionLabel}</span>}
+          <StretchText as="h2" className="section-title" text={page.title || ''} />
+          {page.subtitle && <p className="skills-sub">{page.subtitle}</p>}
         </div>
-        <div className="skills-right skills-sections">
-          {(page.sections || []).map((section) => (
-            <div key={section.title} className="skills-section-card fade-up is-visible">
-              <h3 className="skills-section-title">{section.title}</h3>
-              <ul className="skills-list">
-                {section.items.map((item) => (
-                  <li key={item} className="skills-list-item">{item}</li>
+        <dl ref={tableRef} className={`skills-table${tableInView ? ' is-in' : ''}`}>
+          {(page.sections || []).map((section, idx) => (
+            <div key={`${section.title}-${idx}`} className="skills-row" style={{ '--i': idx }}>
+              <dt className="skills-group">
+                {section.title}
+                <span className="skills-count">{(section.items || []).length}</span>
+              </dt>
+              <dd className="skills-items">
+                {(section.items || []).map((item, i, all) => (
+                  <span key={item} className="skill" style={{ '--j': i }}>{item}{i < all.length - 1 ? ', ' : ''}</span>
                 ))}
-              </ul>
+              </dd>
             </div>
           ))}
-        </div>
+        </dl>
       </div>
     </section>
   )
