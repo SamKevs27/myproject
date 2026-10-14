@@ -1,0 +1,577 @@
+/* ===== 8-BIT JOURNEY =====
+   NES-like palette, hard pixel edges: no gradients, blur or rounded corners. */
+
+html[data-view='journey'],
+html[data-view='journey'] body {
+  background: #5aa8f0;
+}
+
+/* the loop eases the character itself; native smooth scrolling would lag the sticky stage */
+html[data-view='journey'] {
+  scroll-behavior: auto;
+}
+
+.journey {
+  --j-sky: #5aa8f0;
+  --j-white: #fcfcfc;
+  --j-green1: #0e4d26;
+  --j-green2: #1c7a30;
+  --j-green3: #3fae3a;
+  --j-green4: #93df4f;
+  --j-brown1: #6b3410;
+  --j-brown2: #b8682a;
+  --j-ink: #1a1018;
+  --j-panel: #1d1530;
+  --j-yellow: #f8c838;
+  --j-yellow-dark: #c47c10;
+  --j-red: #e03c28;
+  --j-title: 'Press Start 2P', ui-monospace, monospace;
+  --j-text: 'VT323', ui-monospace, monospace;
+
+  position: relative;
+  font-family: var(--j-text);
+  font-size: 22px;
+  line-height: 1.25;
+  color: var(--j-white);
+  background: var(--j-sky);
+}
+
+.journey a {
+  color: inherit;
+}
+
+.j-loading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  font-family: var(--j-title);
+  font-size: 14px;
+}
+
+.j-skip {
+  position: absolute;
+  left: -9999px;
+  z-index: 50;
+}
+
+.j-skip:focus {
+  left: 12px;
+  top: 12px;
+  padding: 8px 12px;
+  background: var(--j-ink);
+  font-family: var(--j-title);
+  font-size: 10px;
+}
+
+/* sticky full-screen stage; the tall parent provides the scroll distance */
+.j-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.j-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* stepped pixel border: square edges with notched corners, no soft shadow */
+.j-pixel-box,
+.j-dialog,
+.j-btn,
+.j-start,
+.j-hud-btn {
+  box-shadow:
+    0 -4px 0 0 var(--j-ink),
+    0 4px 0 0 var(--j-ink),
+    -4px 0 0 0 var(--j-ink),
+    4px 0 0 0 var(--j-ink);
+}
+
+/* ---------- HUD ---------- */
+.j-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 20px;
+  font-family: var(--j-title);
+  font-size: 11px;
+  color: var(--j-white);
+  text-shadow: 2px 2px 0 var(--j-ink);
+}
+
+.j-hud p {
+  margin: 0;
+}
+
+.j-hud-world {
+  min-width: 15em;
+}
+
+.j-hud-progress {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.j-hud-bar {
+  flex: 1;
+  height: 10px;
+  background: var(--j-ink);
+  border: 2px solid var(--j-white);
+}
+
+.j-hud-bar span {
+  display: block;
+  height: 100%;
+  background: var(--j-yellow);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.j-hud-coins {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.j-hud-coins img,
+.j-coin-pop {
+  image-rendering: pixelated;
+}
+
+.j-hud-btn {
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--j-ink);
+  background: var(--j-white);
+  border: none;
+  text-shadow: none;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.j-hud-btn:hover {
+  background: var(--j-yellow);
+}
+
+.journey .j-hud-btn {
+  color: var(--j-ink);
+}
+
+/* the speaker emoji isn't in the pixel font, so give it a system emoji face */
+.j-hud-sound {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  font-size: 14px;
+  padding: 3px 6px;
+}
+
+/* ---------- title screen ---------- */
+.j-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: max(64px, calc(var(--char-top, 60vh) * 0.18));
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 0 16px;
+  text-align: center;
+}
+
+.j-game-title {
+  margin: 0;
+  font-family: var(--j-title);
+  font-size: clamp(20px, 4.4vw, 52px);
+  font-weight: 400;
+  line-height: 1.3;
+  text-transform: uppercase;
+  color: var(--j-yellow);
+  text-shadow: 4px 4px 0 var(--j-ink), -2px -2px 0 var(--j-yellow-dark);
+}
+
+.j-game-sub {
+  margin: 0;
+  font-family: var(--j-title);
+  font-size: clamp(10px, 1.4vw, 16px);
+  text-transform: uppercase;
+  color: var(--j-white);
+  text-shadow: 3px 3px 0 var(--j-ink);
+}
+
+.j-start {
+  margin-top: 10px;
+  padding: 14px 20px;
+  font-family: var(--j-title);
+  font-size: clamp(11px, 1.3vw, 15px);
+  color: var(--j-ink);
+  background: var(--j-yellow);
+  border: none;
+  cursor: pointer;
+  animation: blink 1s steps(1) infinite;
+}
+
+.j-start:hover,
+.j-start:focus-visible {
+  animation: none;
+  background: var(--j-white);
+}
+
+.j-hint,
+.j-press {
+  margin: 0;
+  font-family: var(--j-title);
+  font-size: 10px;
+  text-shadow: 2px 2px 0 var(--j-ink);
+}
+
+.j-hint {
+  animation: blink 1.2s steps(1) infinite;
+}
+
+.j-press {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 14px;
+  opacity: 0.85;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* ---------- checkpoint dialogs ---------- */
+.j-dialog {
+  position: absolute;
+  z-index: 15;
+  top: 72px;
+  left: 50%;
+  width: min(640px, calc(100vw - 40px));
+  max-height: calc(var(--char-top, 60vh) - 90px);
+  overflow-y: auto;
+  padding: 18px 22px 20px;
+  background: var(--j-panel);
+  border: 4px solid var(--j-white);
+  transform: translate(-50%, -24px);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 0.25s steps(4), opacity 0.25s steps(4), visibility 0s 0.25s;
+  scrollbar-color: var(--j-yellow) var(--j-ink);
+}
+
+.j-dialog.is-open {
+  transform: translate(-50%, 0);
+  opacity: 1;
+  visibility: visible;
+  transition: transform 0.25s steps(4), opacity 0.25s steps(4);
+}
+
+/* typewriter intro line: monospace font, so width can step by characters */
+.j-type {
+  margin: 0 0 12px;
+  width: calc(var(--n) * 1ch + 1ch);
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--j-title);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--j-yellow);
+}
+
+.j-dialog.is-open .j-type {
+  animation: typing calc(var(--n) * 45ms) steps(var(--n)) both;
+}
+
+@keyframes typing {
+  from { width: 0; }
+}
+
+.j-body p {
+  margin: 0 0 10px;
+}
+
+.j-kicker {
+  font-family: var(--j-title);
+  font-size: 9px;
+  color: var(--j-green4);
+}
+
+.j-heading {
+  margin: 4px 0 4px;
+  font-family: var(--j-title);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--j-white);
+}
+
+.j-sub {
+  color: var(--j-yellow);
+}
+
+.j-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.j-list li {
+  position: relative;
+  padding-left: 22px;
+  margin-bottom: 6px;
+}
+
+.j-list li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0.45em;
+  width: 8px;
+  height: 8px;
+  background: var(--j-yellow);
+}
+
+.j-stats,
+.j-tags,
+.j-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 8px 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.j-stats strong {
+  font-family: var(--j-title);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--j-yellow);
+}
+
+.j-facts {
+  margin: 0;
+}
+
+.j-facts div {
+  display: flex;
+  gap: 12px;
+}
+
+.j-facts dt {
+  min-width: 6em;
+  color: var(--j-green4);
+}
+
+.j-facts dd {
+  margin: 0;
+}
+
+.j-tags li {
+  padding: 2px 8px;
+  color: var(--j-ink);
+  background: var(--j-green4);
+}
+
+/* skills as an inventory */
+.j-inventory {
+  display: grid;
+  gap: 14px;
+}
+
+.j-pouch h3 {
+  margin: 0 0 6px;
+  font-family: var(--j-title);
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--j-green4);
+}
+
+.j-pouch ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.j-slot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px 2px 6px;
+  background: #2c2148;
+  border: 2px solid #4a3a72;
+}
+
+.j-gem {
+  width: 8px;
+  height: 8px;
+  background: var(--gem);
+  box-shadow: 2px 2px 0 var(--j-ink);
+}
+
+/* buttons */
+.j-btn {
+  display: inline-block;
+  margin: 4px 4px 4px 0;
+  padding: 10px 14px;
+  font-family: var(--j-title);
+  font-size: 11px;
+  line-height: 1;
+  color: var(--j-ink) !important;
+  background: var(--j-white);
+  border: none;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.j-btn:hover {
+  background: var(--j-yellow);
+}
+
+.j-btn-small {
+  padding: 8px 10px;
+  font-size: 9px;
+}
+
+.j-btn-gold {
+  background: var(--j-yellow);
+}
+
+.j-btn-gold:hover {
+  background: var(--j-white);
+}
+
+.j-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+/* pixel focus ring */
+.journey a:focus-visible,
+.journey button:focus-visible {
+  outline: 4px solid var(--j-yellow);
+  outline-offset: 4px;
+}
+
+/* coin pop when a section is reached */
+.j-coin-pop {
+  position: absolute;
+  z-index: 25;
+  left: 50%;
+  top: calc(var(--char-top, 60vh) - 20px);
+  width: 32px;
+  height: 32px;
+  margin-left: -16px;
+  opacity: 0;
+  animation: coinPop 0.7s steps(7) forwards;
+}
+
+@keyframes coinPop {
+  0% { opacity: 1; transform: translateY(0); }
+  70% { opacity: 1; transform: translateY(-64px); }
+  100% { opacity: 0; transform: translateY(-72px); }
+}
+
+/* ---------- narrow screens: dialogs dock at the bottom over the dirt ---------- */
+@media (max-width: 640px) {
+  .journey {
+    font-size: 20px;
+  }
+
+  .j-hud {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 10px 12px;
+    font-size: 8px;
+  }
+
+  .j-hud-world {
+    min-width: 0;
+    flex-basis: 100%;
+  }
+
+  .j-dialog {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: calc(100% - var(--ground-top, 50vh) - 8px);
+    transform: translateY(24px);
+    border-width: 4px 0 0;
+    box-shadow: none;
+  }
+
+  .j-dialog.is-open {
+    transform: none;
+  }
+
+  .j-type {
+    font-size: 10px;
+  }
+
+  .j-heading {
+    font-size: 12px;
+  }
+}
+
+/* ---------- reduced motion: still scene, content stacked below ---------- */
+.journey.is-static .j-stage {
+  position: relative;
+}
+
+.journey.is-static .j-press {
+  position: absolute;
+}
+
+.j-static-list {
+  display: grid;
+  gap: 32px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+  background: var(--j-brown1);
+}
+
+.journey.is-static .j-static-list {
+  background: #6b3410;
+  max-width: none;
+  padding-inline: max(20px, calc((100% - 680px) / 2));
+}
+
+.j-static-list .j-dialog {
+  position: static;
+  width: auto;
+  max-height: none;
+  transform: none;
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .j-start,
+  .j-hint {
+    animation: none;
+  }
+}

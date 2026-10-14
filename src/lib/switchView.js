@@ -1,7 +1,7 @@
 import { prefersReducedMotion } from '../hooks/useInView'
 
-const NAVIGATE_AT = { fun: 420, formal: 260 } // ms into the effect when the page swaps
-const REMOVE_AT = { fun: 900, formal: 620 }
+const NAVIGATE_AT = { fun: 420, formal: 260, journey: 480 } // ms into the effect when the page swaps
+const REMOVE_AT = { fun: 900, formal: 620, journey: 950 }
 
 /**
  * Switches between the formal and fun views with a short transition: a burst
@@ -27,6 +27,15 @@ export function switchView(navigate, to, target) {
       bar.style.background = bar.style.color = colors[i % colors.length]
       bar.style.animationDelay = `${Math.random() * 260}ms`
       overlay.appendChild(bar)
+    }
+  }
+  if (target === 'journey') {
+    // a blocky wipe: rows of 8-bit sky tiles stepping in
+    for (let i = 0; i < 8; i++) {
+      const row = document.createElement('span')
+      row.style.top = `${i * 12.5}%`
+      row.style.animationDelay = `${i * 30}ms`
+      overlay.appendChild(row)
     }
   }
   document.body.appendChild(overlay)

@@ -6,12 +6,14 @@ import MotionLayer from './components/MotionLayer'
 import GlitchOverlay from './components/GlitchOverlay'
 import HomePage from './pages/HomePage'
 import FormalPage from './pages/FormalPage'
-import { FUN_PATH } from './lib/routes'
+import { FUN_PATH, JOURNEY_PATH } from './lib/routes'
 import { PortfolioContentProvider } from './context/PortfolioContentContext'
 import './App.css'
 
 // Admin (and Firebase Auth) is split into its own chunk so visitors never download it.
 const Admin = lazy(() => import('./pages/Admin'))
+// The 8-bit journey is its own chunk too, with its pixel fonts loaded on demand.
+const JourneyPage = lazy(() => import('./pages/JourneyPage'))
 
 const LEGACY_SECTION_PATHS = {
   '/about': 'about',
@@ -85,6 +87,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<FormalPage />} />
         <Route path={FUN_PATH} element={<FunShell><HomePage /></FunShell>} />
+        <Route path={JOURNEY_PATH} element={<Suspense fallback={<div style={{ minHeight: '100vh', background: '#5aa8f0' }} />}><JourneyPage /></Suspense>} />
         <Route path="/admin" element={<FunShell><Suspense fallback={null}><Admin /></Suspense></FunShell>} />
         <Route path="*" element={<LegacySectionRedirect />} />
       </Routes>

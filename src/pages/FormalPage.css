@@ -327,7 +327,65 @@ html[data-view='formal'] body {
   }
 }
 
+/* "Start Journey": an 8-bit pixel button, square with a hard shadow */
+.f-modes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.f-journey {
+  flex-shrink: 0;
+  padding: 0.65rem 1.1rem;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--f-ink);
+  background: #fff;
+  border: 2px solid var(--f-ink);
+  border-radius: 0;
+  box-shadow: 3px 3px 0 var(--f-ink);
+  cursor: pointer;
+  transition: transform 0.1s steps(2), box-shadow 0.1s steps(2), background 0.15s;
+}
+
+.f-journey:hover {
+  background: #f8c838;
+}
+
+.f-journey:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--f-ink);
+}
+
+.f-journey:focus-visible {
+  outline: 2px solid var(--f-accent);
+  outline-offset: 3px;
+}
+
 /* ===== the switch effect (used by both views) ===== */
+
+.view-switch-journey span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 12.6%;
+  background: #5aa8f0;
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: pixelWipe 0.95s steps(8) forwards;
+}
+
+.view-switch-journey span:nth-child(even) {
+  transform-origin: right;
+}
+
+@keyframes pixelWipe {
+  0% { transform: scaleX(0); }
+  45%, 60% { transform: scaleX(1); }
+  100% { transform: scaleX(1); opacity: 0; }
+}
 .view-switch {
   position: fixed;
   inset: 0;

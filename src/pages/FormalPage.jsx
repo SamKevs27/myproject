@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import portrait from '../assets/portrait.webp'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
 import { PRIVATE_MARK, hasProjectLink, linkLabel, sortByOrder } from '../lib/projects'
-import { FUN_PATH } from '../lib/routes'
+import { FUN_PATH, JOURNEY_PATH } from '../lib/routes'
 import { switchView } from '../lib/switchView'
 import './FormalPage.css'
 
@@ -53,6 +53,7 @@ export default function FormalPage() {
   }, [])
 
   const goFun = () => switchView(navigate, FUN_PATH, 'fun')
+  const goJourney = () => switchView(navigate, JOURNEY_PATH, 'journey')
 
   if (loading) return <div className="formal f-loading" role="status">Loading…</div>
 
@@ -74,9 +75,12 @@ export default function FormalPage() {
             <p className="f-role">{home.barRole}</p>
           </div>
         </div>
-        <button type="button" className="f-fun" onClick={goFun}>
-          <span>Make it fun</span>
-        </button>
+        <div className="f-modes">
+          <button type="button" className="f-fun" onClick={goFun}>
+            <span>Make it fun</span>
+          </button>
+          <button type="button" className="f-journey" onClick={goJourney}>▶ Start Journey</button>
+        </div>
       </header>
 
       <nav className="f-links" aria-label="Contact and profiles">
@@ -167,7 +171,10 @@ export default function FormalPage() {
 
       <footer className="f-footer">
         <span>© {new Date().getFullYear()} {home.barName}</span>
-        <button type="button" className="f-fun f-fun-small" onClick={goFun}><span>Make it fun</span></button>
+        <div className="f-modes">
+          <button type="button" className="f-fun f-fun-small" onClick={goFun}><span>Make it fun</span></button>
+          <button type="button" className="f-journey f-fun-small" onClick={goJourney}>▶ Start Journey</button>
+        </div>
       </footer>
     </div>
   )
