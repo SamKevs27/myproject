@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { prefersReducedMotion } from '../hooks/useInView'
+import { useIsFormal } from '../context/ViewMode'
 import { COLORS, rgba } from '../theme'
 
 const TAU = Math.PI * 2
@@ -322,7 +323,7 @@ const SCENES = { network, codeField, blueprint, stream, signal }
  * A themed, interactive canvas behind a section's content. Runs only while the
  * section is on screen; reduced motion gets a single still frame.
  */
-export default function SectionBackground({ variant }) {
+function SectionBackgroundCanvas({ variant }) {
   const canvasRef = useRef(null)
 
   useEffect(() => {
@@ -412,4 +413,9 @@ export default function SectionBackground({ variant }) {
   }, [variant])
 
   return <canvas ref={canvasRef} className="section-bg" aria-hidden="true" />
+}
+
+// The formal view keeps the layout but drops the animated backgrounds.
+export default function SectionBackground(props) {
+  return useIsFormal() ? null : <SectionBackgroundCanvas {...props} />
 }

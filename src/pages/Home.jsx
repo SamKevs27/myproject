@@ -5,23 +5,24 @@ import { usePortfolioContent } from '../context/PortfolioContentContext'
 import StretchText from '../components/StretchText'
 import HeroBackground from '../components/HeroBackground'
 import { prefersReducedMotion } from '../hooks/useInView'
-import { funSection } from '../lib/routes'
+import { sectionHref } from '../lib/routes'
+import { useViewMode } from '../context/ViewMode'
 
 const SECTION_PATHS = new Set(['/about', '/skills', '/projects', '/experience', '/contact'])
 
-function toSectionLink(to, fallback) {
+function toSectionLink(mode, to, fallback) {
   const target = to || fallback
-  return SECTION_PATHS.has(target) ? funSection(target.slice(1)) : target
+  return SECTION_PATHS.has(target) ? sectionHref(mode, target.slice(1)) : target
 }
 
 // Letters within this many px of the cursor widen and thicken.
 const REACH = 340
 
 // The big name reacts to the cursor: nearby letters stretch wider and heavier.
-function useNameProximity(heroRef) {
+function useNameProximity(heroRef, enabled) {
   useEffect(() => {
     const hero = heroRef.current
-    if (!hero || prefersReducedMotion() || !window.matchMedia('(hover: hover)').matches) return undefined
+    if (!enabled || !hero || prefersReducedMotion() || !window.matchMedia('(hover: hover)').matches) return undefined
 
     const chars = [...hero.querySelectorAll('.hero-name .st-char')]
     let raf = 0
@@ -51,14 +52,14 @@ function useNameProximity(heroRef) {
       hero.removeEventListener('pointerleave', onLeave)
       cancelAnimationFrame(raf)
     }
-  }, [heroRef])
+  }, [heroRef, enabled])
 }
 
 // As the hero scrolls away, the name and portrait drift at different depths.
-function useHeroParallax(heroRef) {
+function useHeroParallax(heroRef, enabled) {
   useEffect(() => {
     const hero = heroRef.current
-    if (!hero || prefersReducedMotion()) return undefined
+    if (!enabled || !hero || prefersReducedMotion()) return undefined
     let raf = 0
     const update = () => {
       raf = 0
@@ -72,24 +73,26 @@ function useHeroParallax(heroRef) {
       window.removeEventListener('scroll', onScroll)
       cancelAnimationFrame(raf)
     }
-  }, [heroRef])
+  }, [heroRef, enabled])
 }
 
 export default function Home() {
   const { home } = usePortfolioContent()
   const heroRef = useRef(null)
-  useNameProximity(heroRef)
-  useHeroParallax(heroRef)
+  const mode = useViewMode()
+  const formal = mode === 'formal'
+  useNameProximity(heroRef, !formal)
+  useHeroParallax(heroRef, !formal)
   const tags = home.barTags || []
-  const primaryCtaTo = toSectionLink(home.primaryCta?.to, '/projects')
-  const secondaryCtaTo = toSectionLink(home.secondaryCta?.to, '/contact')
+  const primaryCtaTo = toSectionLink(mode, home.primaryCta?.to, '/projects')
+  const secondaryCtaTo = toSectionLink(mode, home.secondaryCta?.to, '/contact')
 
   return (
     <section className="hero" id="hero" ref={heroRef}>
       <HeroBackground heroRef={heroRef} />
       {/* decorative neon signs: "Samuel" and "engineer" in katakana */}
-      <span className="neon-sign neon-sign-name" aria-hidden="true">サミュエル</span>
-      <span className="neon-sign neon-sign-role" aria-hidden="true">エンジニア</span>
+      {!formal && <span className="neon-sign neon-sign-name" aria-hidden="true">サミュエル</span>}
+      {!formal && <span className="neon-sign neon-sign-role" aria-hidden="true">エンジニア</span>}
       {/* the giant name below is decorative (aria-hidden), so this is the real page heading */}
       <h1 className="sr-only">{[home.barName, home.barRole].filter(Boolean).join(' — ')}</h1>
       <div className="hero-name" aria-hidden="true">

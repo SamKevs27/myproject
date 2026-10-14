@@ -5,8 +5,9 @@ import Footer from './components/Footer'
 import MotionLayer from './components/MotionLayer'
 import GlitchOverlay from './components/GlitchOverlay'
 import HomePage from './pages/HomePage'
-import FormalPage from './pages/FormalPage'
-import { FUN_PATH, JOURNEY_PATH } from './lib/routes'
+import ChooserPage from './pages/ChooserPage'
+import { FORMAL_PATH, FUN_PATH, JOURNEY_PATH } from './lib/routes'
+import { ViewModeContext } from './context/ViewMode'
 import { PortfolioContentProvider } from './context/PortfolioContentContext'
 import './App.css'
 
@@ -27,7 +28,7 @@ function ScrollToHash() {
   const location = useLocation()
 
   useEffect(() => {
-    if (location.pathname !== '/' && location.pathname !== FUN_PATH) return undefined
+    if (location.pathname !== FORMAL_PATH && location.pathname !== FUN_PATH) return undefined
 
     const id = location.hash.slice(1)
     if (!id || id === 'hero') {
@@ -50,33 +51,44 @@ function ScrollToHash() {
   return null
 }
 
-// Old per-section URLs (/about, /projects…) now land on the formal page's section.
+// Old per-section URLs (/about, /projects…) land on that section of the formal view.
 function LegacySectionRedirect() {
   const location = useLocation()
   const navigate = useNavigate()
 
   useEffect(() => {
     const sectionId = LEGACY_SECTION_PATHS[location.pathname]
-    navigate(sectionId ? `/#${sectionId}` : '/', { replace: true })
+    navigate(sectionId ? `${FORMAL_PATH}#${sectionId}` : '/', { replace: true })
   }, [location.pathname, navigate])
 
   return null
 }
 
-// The neon site: pointer effects, glitch overlay, navbar and footer.
-function FunShell({ children }) {
+// Shared layout for the fun and formal views. Fun adds the pointer effects
+// and glitch overlay; formal keeps the same layout and turns the motion off.
+function SiteShell({ mode, children }) {
   const location = useLocation()
+  const formal = mode === 'formal'
+
+  useEffect(() => {
+    if (!formal) return undefined
+    document.documentElement.dataset.view = 'formal'
+    return () => { delete document.documentElement.dataset.view }
+  }, [formal])
+
   return (
-    <div className="app-shell">
-      <MotionLayer />
-      <GlitchOverlay />
-      <Navbar />
-      <main className="app-main">
-        {/* key change re-mounts the div, re-triggering the CSS enter animation */}
-        <div className="page-transition" key={location.pathname}>{children}</div>
-      </main>
-      <Footer />
-    </div>
+    <ViewModeContext.Provider value={mode}>
+      <div className={`app-shell${formal ? ' view-formal' : ''}`}>
+        {!formal && <MotionLayer />}
+        {!formal && <GlitchOverlay />}
+        <Navbar />
+        <main className="app-main">
+          {/* key change re-mounts the div, re-triggering the CSS enter animation */}
+          <div className="page-transition" key={location.pathname}>{children}</div>
+        </main>
+        <Footer />
+      </div>
+    </ViewModeContext.Provider>
   )
 }
 
@@ -85,10 +97,11 @@ function AppRoutes() {
     <>
       <ScrollToHash />
       <Routes>
-        <Route path="/" element={<FormalPage />} />
-        <Route path={FUN_PATH} element={<FunShell><HomePage /></FunShell>} />
+        <Route path="/" element={<ChooserPage />} />
+        <Route path={FORMAL_PATH} element={<SiteShell mode="formal"><HomePage /></SiteShell>} />
+        <Route path={FUN_PATH} element={<SiteShell mode="fun"><HomePage /></SiteShell>} />
         <Route path={JOURNEY_PATH} element={<Suspense fallback={<div style={{ minHeight: '100vh', background: '#5aa8f0' }} />}><JourneyPage /></Suspense>} />
-        <Route path="/admin" element={<FunShell><Suspense fallback={null}><Admin /></Suspense></FunShell>} />
+        <Route path="/admin" element={<SiteShell mode="fun"><Suspense fallback={null}><Admin /></Suspense></SiteShell>} />
         <Route path="*" element={<LegacySectionRedirect />} />
       </Routes>
     </>

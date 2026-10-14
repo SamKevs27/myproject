@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { prefersReducedMotion } from '../hooks/useInView'
+import { useIsFormal } from '../context/ViewMode'
 import { COLORS, mix, rgba } from '../theme'
 
 const COLS = 64 // vertices across
@@ -28,7 +29,7 @@ function waveHeight(x, z, t) {
  * and diagonal lines, rolling like a sea swell. The water lifts toward the
  * cursor, and a click drops a ripple that spreads across the surface.
  */
-export default function HeroBackground({ heroRef }) {
+function HeroBackgroundCanvas({ heroRef }) {
   const canvasRef = useRef(null)
 
   useEffect(() => {
@@ -257,4 +258,9 @@ export default function HeroBackground({ heroRef }) {
   }, [heroRef])
 
   return <canvas ref={canvasRef} className="hero-bg" aria-hidden="true" />
+}
+
+// The formal view keeps the layout but drops the animated backgrounds.
+export default function HeroBackground(props) {
+  return useIsFormal() ? null : <HeroBackgroundCanvas {...props} />
 }

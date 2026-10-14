@@ -1,4 +1,5 @@
 import { prefersReducedMotion } from '../hooks/useInView'
+import './switchView.css'
 
 const NAVIGATE_AT = { fun: 420, formal: 260, journey: 480 } // ms into the effect when the page swaps
 const REMOVE_AT = { fun: 900, formal: 620, journey: 950 }

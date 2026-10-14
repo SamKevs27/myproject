@@ -1,5 +1,7 @@
-// The formal, minimalist page lives at "/"; the neon "fun" version at FUN_PATH.
+// "/" is the view chooser; the portfolio itself comes in three views.
+export const FORMAL_PATH = '/formal'
 export const FUN_PATH = '/fun'
 export const JOURNEY_PATH = '/journey'
 
-export const funSection = (id) => (id ? `${FUN_PATH}#${id}` : FUN_PATH)
+export const pathFor = (mode) => (mode === 'formal' ? FORMAL_PATH : FUN_PATH)
+export const sectionHref = (mode, id) => (id ? `${pathFor(mode)}#${id}` : pathFor(mode))

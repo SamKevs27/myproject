@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { prefersReducedMotion, useInView } from '../hooks/useInView'
+import { useIsFormal } from '../context/ViewMode'
 
 const GLYPHS = '!<>-_\\/[]{}=+*^?#01'
 const DURATION = 750 // ms for the whole label to resolve
@@ -13,10 +14,11 @@ export default function ScrambleText({ text = '', as = 'span', className = '' })
   const Tag = as
   const [ref, inView] = useInView({ threshold: 0.6 })
   const outRef = useRef(null)
+  const formal = useIsFormal()
 
   useEffect(() => {
     const out = outRef.current
-    if (!out || !inView || prefersReducedMotion()) return undefined
+    if (!out || !inView || formal || prefersReducedMotion()) return undefined
     let raf = 0
     const start = performance.now()
     const tick = (now) => {
@@ -31,7 +33,7 @@ export default function ScrambleText({ text = '', as = 'span', className = '' })
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [inView, text])
+  }, [inView, text, formal])
 
   return (
     <Tag ref={ref} className={`scramble${className ? ` ${className}` : ''}`} aria-label={text}>

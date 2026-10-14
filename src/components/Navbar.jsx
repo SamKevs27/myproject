@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
-import { FUN_PATH, funSection } from '../lib/routes'
+import { FORMAL_PATH, FUN_PATH, JOURNEY_PATH, pathFor, sectionHref } from '../lib/routes'
+import { useViewMode } from '../context/ViewMode'
 import { switchView } from '../lib/switchView'
 
 const NAV_LINKS = [
@@ -37,7 +38,9 @@ export default function Navbar() {
   const progressRef = useRef(null)
   const location = useLocation()
   const navigate = useNavigate()
-  const onHome = location.pathname === FUN_PATH
+  const mode = useViewMode()
+  const basePath = pathFor(mode)
+  const onHome = location.pathname === basePath
   const active = onHome ? activeSection : ''
 
   // Track the current section and scroll progress from the scroll position.
@@ -103,18 +106,22 @@ export default function Navbar() {
     }
   }, [open])
 
-  const toFormal = (e) => {
+  // switch to another view of the portfolio
+  const switchTo = (path, effect) => (e) => {
     e.preventDefault()
     setOpen(false)
-    switchView(navigate, '/', 'formal')
+    switchView(navigate, path, effect)
   }
+  const toFormal = switchTo(FORMAL_PATH, 'formal')
+  const toFun = switchTo(FUN_PATH, 'fun')
+  const toJourney = switchTo(JOURNEY_PATH, 'journey')
 
   // Always scroll on click, even when the hash is already the same.
   const goTo = (e, sectionId) => {
     e.preventDefault()
     setOpen(false)
     if (!onHome) {
-      navigate(funSection(sectionId))
+      navigate(sectionHref(mode, sectionId))
       return
     }
     if (sectionId) {
@@ -122,7 +129,7 @@ export default function Navbar() {
       window.history.replaceState(null, '', `#${sectionId}`)
     } else {
       window.scrollTo({ top: 0, behavior: 'smooth' })
-      window.history.replaceState(null, '', FUN_PATH)
+      window.history.replaceState(null, '', basePath)
     }
   }
 
@@ -130,14 +137,14 @@ export default function Navbar() {
     <nav className={`navbar${open ? ' is-open' : ''}`} aria-label="Main">
       <span className="scroll-progress" ref={progressRef} aria-hidden="true" />
       <div className="navbar-inner">
-        <a href={FUN_PATH} className="navbar-logo" onClick={(e) => goTo(e, '')}>SKL</a>
+        <a href={basePath} className="navbar-logo" onClick={(e) => goTo(e, '')}>SKL</a>
 
         <ul className="navbar-links" ref={listRef}>
           <span className="nav-pill" ref={pillRef} aria-hidden="true" />
           {NAV_LINKS.map((l, i) => (
             <li key={l.sectionId} style={{ '--i': i }}>
               <a
-                href={funSection(l.sectionId)}
+                href={sectionHref(mode, l.sectionId)}
                 ref={(el) => { linkRefs.current[l.sectionId] = el }}
                 className={active === l.sectionId ? 'nav-active' : ''}
                 aria-current={active === l.sectionId ? 'true' : undefined}
@@ -148,12 +155,26 @@ export default function Navbar() {
             </li>
           ))}
           <li className="nav-formal-item" style={{ '--i': NAV_LINKS.length }}>
-            <a href="/" onClick={toFormal}>Formal view</a>
+            {mode === 'formal'
+              ? <a href={FUN_PATH} onClick={toFun}>Make it fun</a>
+              : <a href={FORMAL_PATH} onClick={toFormal}>Formal view</a>}
           </li>
+          {mode === 'formal' && (
+            <li className="nav-formal-item" style={{ '--i': NAV_LINKS.length + 1 }}>
+              <a href={JOURNEY_PATH} onClick={toJourney}>Start journey</a>
+            </li>
+          )}
         </ul>
 
         <div className="navbar-actions">
-          <a href="/" className="navbar-formal" onClick={toFormal}>Formal view</a>
+          {mode === 'formal' ? (
+            <>
+              <a href={FUN_PATH} className="navbar-formal" onClick={toFun}>Make it fun</a>
+              <a href={JOURNEY_PATH} className="navbar-formal" onClick={toJourney}>Start journey</a>
+            </>
+          ) : (
+            <a href={FORMAL_PATH} className="navbar-formal" onClick={toFormal}>Formal view</a>
+          )}
           {home.cvUrl && (
             <a href={home.cvUrl} target="_blank" rel="noreferrer" className="navbar-cv">Download CV</a>
           )}

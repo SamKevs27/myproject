@@ -293,6 +293,9 @@ button:focus-visible {
 
   .nav-formal-item {
     display: block;
+  }
+
+  .nav-formal-item:not(.nav-formal-item + .nav-formal-item) {
     margin-top: 1rem;
   }
 
@@ -3616,5 +3619,324 @@ body {
 
   .contact-socials {
     justify-content: center;
+  }
+}
+
+/* ================= FORMAL VIEW =================
+   Same layout as the fun view, quiet styling: ink on white, one typeface,
+   a single deep violet accent, no glow, glitches or motion. */
+
+html[data-view='formal'],
+html[data-view='formal'] body {
+  background: #ffffff;
+  color-scheme: light;
+}
+
+.view-formal {
+  --bg: #ffffff;
+  --bg2: #f6f5f9;
+  --bg3: #eeecf3;
+  --border: #e2dfe9;
+  --text: #16131c;
+  --muted: #625d6e;
+  --accent: #4c1d95;
+  --accent2: #5b21b6;
+  --cyan: #4c1d95;
+  --pink: #4c1d95;
+  --amber: #8a5a12;
+  --font-display: 'Instrument Sans', system-ui, sans-serif;
+  background: #ffffff;
+  color: var(--text);
+}
+
+/* nothing moves on its own; everything is visible straight away */
+.view-formal *,
+.view-formal *::before,
+.view-formal *::after {
+  animation: none !important;
+  text-shadow: none !important;
+}
+
+.view-formal :is(.proj-layout .pc, .skills-table .skills-row, .exp-group .exp-right, .exp-group .exp-dot,
+  .exp-group .exp-dot::before, .about-stats .stat, .rise-group .rise, .rise-group .pop,
+  .contact-actions > *, .contact-actions .contact-social-link) {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.view-formal .exp-dot::before {
+  transform: translateX(-50%) !important;
+}
+
+/* type: one family, normal widths */
+.view-formal :is(.section-title, .hero-name-text, .hero-bar-name, .pc-title, .skills-group, .navbar-logo, .proj-filters button, .email-copy-address) {
+  font-family: var(--font-body);
+  font-stretch: 100%;
+}
+
+.view-formal .section-title {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.view-formal .section-label {
+  color: var(--muted);
+}
+
+/* square-ish, softly rounded shapes instead of cut corners */
+.view-formal :is(.btn, .navbar-cv, .navbar-links, .nav-pill, .proj-filters button, .email-copy, .pc, .about-figure, .detail-chip, .tc) {
+  clip-path: none;
+}
+
+.view-formal :is(.btn, .navbar-cv, .proj-filters button, .email-copy) {
+  border-radius: 8px;
+}
+
+.view-formal :is(.navbar-links, .nav-pill) {
+  border-radius: 999px;
+}
+
+.view-formal .pc {
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.view-formal .pc::before {
+  display: none;
+}
+
+/* navbar */
+.view-formal .navbar {
+  border-bottom-color: var(--border);
+}
+
+.view-formal .navbar::before {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.view-formal .navbar-links {
+  background: var(--bg2);
+}
+
+.view-formal .nav-pill {
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(22, 19, 28, 0.12), inset 0 0 0 1px var(--border);
+}
+
+.view-formal .navbar-cv {
+  background: var(--text);
+  color: #ffffff;
+  border-color: var(--text);
+}
+
+.view-formal .navbar-cv:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.view-formal .scroll-progress {
+  background: var(--accent);
+}
+
+/* buttons */
+.view-formal .btn-primary,
+.view-formal .btn-primary:hover {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.view-formal .btn-primary::after {
+  display: none;
+}
+
+.view-formal .btn-primary:hover {
+  background: var(--accent2);
+}
+
+.view-formal .btn-outline {
+  background: #ffffff;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.view-formal .btn-outline:hover {
+  border-color: var(--text);
+  color: var(--text);
+  background: #ffffff;
+}
+
+/* hero: same composition, light and still */
+.view-formal .hero {
+  background: var(--bg2);
+}
+
+.view-formal .hero::before {
+  background: linear-gradient(to bottom, transparent 60%, rgba(246, 245, 249, 0.9) 92%);
+}
+
+.view-formal .hero-name-text,
+.view-formal .hero-name-text .st-char {
+  color: rgba(22, 19, 28, 0.9);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.view-formal .hero-bar {
+  background: rgba(255, 255, 255, 0.92);
+  border-top-color: var(--border);
+  box-shadow: none;
+}
+
+.view-formal .hero-bar-dividers span {
+  color: var(--muted) !important;
+}
+
+.view-formal .hero-label {
+  color: var(--muted);
+}
+
+.view-formal .hero-img {
+  filter: none;
+}
+
+/* about */
+.view-formal .about-figure,
+.view-formal .about-stats {
+  border-radius: 14px;
+}
+
+.view-formal .about-figure::before,
+.view-formal .about-figure::after {
+  display: none;
+}
+
+.view-formal .stat {
+  background: var(--bg2);
+}
+
+.view-formal .stat .stat-num {
+  color: var(--text) !important;
+}
+
+.view-formal .detail-chip {
+  border-radius: 8px;
+  border-left: 1px solid var(--border);
+}
+
+/* skills */
+.view-formal .skills-count {
+  color: var(--muted);
+  border-color: var(--border);
+}
+
+/* projects: one neutral card style, colour only marks the category text */
+.view-formal .pc {
+  --cat: var(--accent);
+  --cat-rgb: 76, 29, 149;
+}
+
+.view-formal .pc-art {
+  background: var(--bg2);
+}
+
+.view-formal .glyph line,
+.view-formal .glyph rect,
+.view-formal .glyph circle,
+.view-formal .glyph path {
+  stroke: var(--muted);
+}
+
+.view-formal .glyph .g-fill { fill: var(--muted); }
+.view-formal .glyph .g-joint { fill: #ffffff; stroke: var(--muted); }
+
+.view-formal .pc.has-link:hover {
+  border-color: var(--text);
+  box-shadow: 0 10px 30px -18px rgba(22, 19, 28, 0.45);
+}
+
+.view-formal .pc-cat {
+  background: #ffffff;
+  color: var(--accent);
+  border-color: var(--border);
+}
+
+.view-formal .pc-tech li {
+  background: var(--bg2);
+}
+
+.view-formal .proj-filters button.is-active {
+  background: var(--text);
+  border-color: var(--text);
+  box-shadow: none;
+}
+
+.view-formal .proj-filters button[data-cat]::before {
+  display: none;
+}
+
+.view-formal .title-count {
+  color: var(--muted);
+  border-color: var(--border);
+}
+
+/* experience + contact */
+.view-formal .exp-dot::before {
+  background: var(--accent);
+  box-shadow: none;
+}
+
+.view-formal .exp-now {
+  color: #15803d;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.view-formal .email-copy {
+  background: var(--bg2);
+}
+
+.view-formal .email-copy-label {
+  background: var(--text);
+}
+
+.view-formal .contact-social-link {
+  border-radius: 50%;
+}
+
+.view-formal .page-section::before {
+  display: none;
+}
+
+/* footer */
+.view-formal .footer {
+  background: var(--bg2);
+  border-top-color: var(--border);
+}
+
+.view-formal .footer-time-dot {
+  background: #15803d;
+}
+
+@media (max-width: 900px) {
+  .view-formal .navbar-links {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 0;
+  }
+
+  .view-formal .navbar-links a {
+    font-family: var(--font-body);
+    font-stretch: 100%;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .view-formal .navbar-links a.nav-active {
+    color: var(--accent);
+  }
+
+  .view-formal .hamburger span {
+    background: var(--text);
   }
 }

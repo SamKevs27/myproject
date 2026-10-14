@@ -58,7 +58,8 @@ This makes the `og:image` absolute so LinkedIn/WhatsApp show the preview card in
 
 ## 7. Views
 
-- `/` formal, minimalist résumé view
+- `/` chooser: three cards to pick a view
+- `/formal` the fun layout with quiet, formal styling and no motion
 - `/fun` neon animated site ("Make it fun")
 - `/journey` 8-bit platformer ("Start Journey"): ←/→ or A/D move, Space/↑/W jump, E/Enter talk/open, on-screen buttons on phones, deep links like `/journey#projects`
   - meet Sam (about, in 2-line speech bubbles) → bonk 7 "?" blocks (skills) → open the chest (project cards) → 3 parkour ledges (education + experience) → castle (contact + CV)

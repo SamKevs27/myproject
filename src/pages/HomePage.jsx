@@ -6,9 +6,11 @@ import Experience from './Experience'
 import Contact from './Contact'
 import SkillsMarquee from '../components/SkillsMarquee'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
+import { useIsFormal } from '../context/ViewMode'
 
 export default function HomePage() {
   const { loading } = usePortfolioContent()
+  const formal = useIsFormal()
 
   // Only shown on a first visit; repeat visits render instantly from cache.
   if (loading) {
@@ -22,7 +24,7 @@ export default function HomePage() {
   return (
     <>
       <Home />
-      <SkillsMarquee />
+      {!formal && <SkillsMarquee />}
       <About />
       <Skills />
       <Projects />

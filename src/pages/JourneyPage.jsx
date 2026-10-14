@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { usePortfolioContent } from '../context/PortfolioContentContext'
 import { prefersReducedMotion } from '../hooks/useInView'
+import { usePixelFonts } from '../hooks/usePixelFonts'
 import { CardGallery, CardModal, ContactPanel, FullContent, LedgePanel, SkillPanel, SpeechBubble } from '../journey/Dialogs'
 import { toBubbles } from '../journey/bubbles'
 import { useJourneyLoop } from '../journey/useJourneyLoop'
@@ -10,19 +11,6 @@ import { setSoundEnabled, sfx } from '../journey/sfx'
 import { spriteDataUrl } from '../journey/renderSprite'
 import { COIN } from '../journey/sprites/scenery'
 import '../journey/Journey.css'
-
-const FONTS_HREF = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap'
-
-// Pixel fonts load only when someone opens the journey.
-function usePixelFonts() {
-  useEffect(() => {
-    if (document.querySelector(`link[href="${FONTS_HREF}"]`)) return
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = FONTS_HREF
-    document.head.appendChild(link)
-  }, [])
-}
 
 function useMedia(query) {
   const [match, setMatch] = useState(() => window.matchMedia(query).matches)
@@ -245,7 +233,7 @@ export default function JourneyPage() {
   if (reduced) {
     return (
       <div className="journey is-static">
-        <Link className="j-skip" to="/">Skip the game: read the plain version</Link>
+        <Link className="j-skip" to="/formal">Skip the game: read the formal version</Link>
         <div className="j-stage" ref={stageRef}>
           <canvas ref={canvasRef} className="j-canvas" aria-hidden="true" />
           <div className="j-title">
@@ -265,7 +253,7 @@ export default function JourneyPage() {
 
   return (
     <div className="journey">
-      <Link className="j-skip" to="/">Skip the game: read the plain version</Link>
+      <Link className="j-skip" to="/formal">Skip the game: read the formal version</Link>
 
       <div className="j-stage" ref={stageRef}>
         <canvas ref={canvasRef} className="j-canvas" aria-hidden="true" />

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useInView } from '../hooks/useInView'
+import { useIsFormal } from '../context/ViewMode'
 
 /**
  * Splits text into letters that stretch in from narrow (Anybody's width axis)
@@ -10,9 +11,19 @@ export default function StretchText({ text = '', as = 'span', className = '', im
   const Tag = as
   const [ref, inView] = useInView({ threshold: 0.4 })
   const [done, setDone] = useState(false)
+  const formal = useIsFormal()
   // When the last letter lands, the entrance is retired so it never replays.
   const total = [...text.replace(/\s+/g, '')].length
   let index = 0
+
+  // formal view: just the words, no per-letter animation
+  if (formal) {
+    return (
+      <Tag ref={ref} className={className}>
+        {text.split('\n').map((line, i) => <span key={i}>{i > 0 && <br />}{line}</span>)}
+      </Tag>
+    )
+  }
 
   return (
     <Tag
