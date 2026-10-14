@@ -6,7 +6,7 @@ import { usePixelFonts } from '../hooks/usePixelFonts'
 import { prefersReducedMotion } from '../hooks/useInView'
 import { FORMAL_PATH, FUN_PATH, JOURNEY_PATH } from '../lib/routes'
 import { switchView } from '../lib/switchView'
-import DotField from '../components/DotField'
+import GradientField from '../components/GradientField'
 import { FormalStage, FunStage, JourneyStage } from '../chooser/Stages'
 import Twigs from '../chooser/Twigs'
 import { spriteCanvas, spriteDataUrl } from '../journey/renderSprite'
@@ -111,7 +111,7 @@ function ThemeLayer({ layer, name, onOpened }) {
 }
 
 /**
- * The landing page. Three floating cards over a reactive dot field; picking
+ * The landing page. Three floating cards over a slowly moving gradient; picking
  * one grows its world out of the card, shows a themed "Get started" button,
  * and docks the other two cards at the bottom so you can still switch.
  */
@@ -226,7 +226,7 @@ export default function ChooserPage() {
 
   return (
     <div className={`chooser${chosen ? ` is-chosen is-${chosen}` : ''}`}>
-      <DotField className="ch-dots" />
+      <GradientField className="ch-gradient" />
       {layers.map((layer) => <ThemeLayer key={layer.key} layer={layer} name={name} onOpened={onOpened} />)}
 
       <header className="ch-header">

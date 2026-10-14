@@ -1,0 +1,103 @@
+import { useEffect, useRef } from 'react'
+import { prefersReducedMotion } from '../hooks/useInView'
+
+const SCALE = 10 // the canvas is 1/10th of the screen; stretching it blurs the blobs together
+const BASE = '#e8957e'
+
+// Big soft colour blobs, each drifting on its own slow loop.
+// [r, g, b], radius (share of the longer screen side), path centre, path size, speeds, phase
+const BLOBS = [
+  { c: [247, 200, 106], r: 0.55, cx: 0.08, cy: 0.12, ax: 0.12, ay: 0.1, sx: 0.21, sy: 0.15, p: 0 }, // golden yellow
+  { c: [245, 214, 186], r: 0.6, cx: 0.32, cy: 0.85, ax: 0.18, ay: 0.12, sx: 0.15, sy: 0.24, p: 1.7 }, // peach cream
+  { c: [227, 122, 99], r: 0.55, cx: 0.5, cy: 0.18, ax: 0.2, ay: 0.14, sx: 0.18, sy: 0.21, p: 3.1 }, // coral
+  { c: [205, 105, 112], r: 0.5, cx: 0.85, cy: 0.2, ax: 0.12, ay: 0.16, sx: 0.24, sy: 0.15, p: 4.4 }, // rose
+  { c: [232, 152, 132], r: 0.5, cx: 0.8, cy: 0.85, ax: 0.15, ay: 0.1, sx: 0.15, sy: 0.18, p: 2.4 }, // salmon
+]
+
+/**
+ * A slowly moving warm gradient: soft colour blobs drift and melt into each
+ * other. One blob leans gently toward the cursor.
+ */
+export default function GradientField({ className = '' }) {
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return undefined
+    const ctx = canvas.getContext('2d')
+    const reduceMotion = prefersReducedMotion()
+    let w = 0
+    let h = 0
+    let raf = 0
+    const pointer = { x: 0.6, y: 0.4, tx: 0.6, ty: 0.4 }
+
+    const resize = () => {
+      w = Math.ceil(window.innerWidth / SCALE)
+      h = Math.ceil(window.innerHeight / SCALE)
+      canvas.width = w
+      canvas.height = h
+    }
+
+    const draw = (time) => {
+      const t = time / 1000
+      const size = Math.max(w, h)
+      ctx.fillStyle = BASE
+      ctx.fillRect(0, 0, w, h)
+      pointer.x += (pointer.tx - pointer.x) * 0.02
+      pointer.y += (pointer.ty - pointer.y) * 0.02
+      BLOBS.forEach((b, i) => {
+        let x = (b.cx + Math.sin(t * b.sx + b.p) * b.ax) * w
+        let y = (b.cy + Math.cos(t * b.sy + b.p) * b.ay) * h
+        if (i === 2) {
+          // the coral blob leans toward the cursor
+          x += (pointer.x * w - x) * 0.35
+          y += (pointer.y * h - y) * 0.35
+        }
+        const r = b.r * size * (1 + Math.sin(t * 0.5 + b.p) * 0.1)
+        const g = ctx.createRadialGradient(x, y, 0, x, y, r)
+        const [cr, cg, cb] = b.c
+        g.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, 0.95)`)
+        g.addColorStop(0.55, `rgba(${cr}, ${cg}, ${cb}, 0.45)`)
+        g.addColorStop(1, `rgba(${cr}, ${cg}, ${cb}, 0)`)
+        ctx.fillStyle = g
+        ctx.fillRect(0, 0, w, h)
+      })
+    }
+
+    const frame = (time) => {
+      draw(time)
+      raf = requestAnimationFrame(frame)
+    }
+
+    const onMove = (e) => {
+      pointer.tx = e.clientX / window.innerWidth
+      pointer.ty = e.clientY / window.innerHeight
+    }
+
+    resize()
+    window.addEventListener('resize', resize)
+    if (reduceMotion) {
+      draw(12000)
+      const redraw = () => draw(12000)
+      window.addEventListener('resize', redraw)
+      return () => {
+        window.removeEventListener('resize', resize)
+        window.removeEventListener('resize', redraw)
+      }
+    }
+    window.addEventListener('pointermove', onMove, { passive: true })
+    raf = requestAnimationFrame(frame)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('resize', resize)
+      window.removeEventListener('pointermove', onMove)
+    }
+  }, [])
+
+  return (
+    <div className={className} aria-hidden="true">
+      <canvas ref={canvasRef} className="gf-canvas" />
+      <span className="gf-grain" />
+    </div>
+  )
+}
