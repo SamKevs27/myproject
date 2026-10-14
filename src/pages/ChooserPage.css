@@ -4,12 +4,12 @@
 
 html[data-view='chooser'],
 html[data-view='chooser'] body {
-  background: #e8957e;
+  background: #c4c4c4;
 }
 
 .chooser {
-  --ch-text: #1d1416;
-  --ch-muted: rgba(29, 20, 22, 0.66);
+  --ch-text: #ffffff;
+  --ch-muted: rgba(255, 255, 255, 0.72);
 
   position: relative;
   min-height: 100vh;
@@ -34,8 +34,8 @@ html[data-view='chooser'] body {
 .gf-canvas {
   width: 100%;
   height: 100%;
-  filter: blur(24px) saturate(1.05);
-  transform: scale(1.08); /* hide the soft edge the blur leaves */
+  filter: blur(70px);
+  transform: scale(1.25); /* hide the soft edge the heavy blur leaves */
 }
 
 .gf-grain {
@@ -58,7 +58,36 @@ html[data-view='chooser'] body {
 
 .ch-header {
   padding-top: clamp(40px, 9vh, 96px);
+  text-align: center;
   pointer-events: none;
+}
+
+/* white text in "difference" mode: dark over the light greys, light over
+   the dark circle, so it stays readable wherever the circle drifts */
+.ch-header,
+.ch-note {
+  mix-blend-mode: difference;
+}
+
+/* captions live inside the floating cards (blend can't reach the backdrop
+   there), so they sit on a small frosted label instead */
+.ch-caption {
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  padding: 10px 16px 12px;
+  color: #141414;
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+}
+
+.ch-caption .ch-text {
+  color: rgba(20, 20, 20, 0.66);
+}
+
+.is-docked .ch-caption {
+  padding: 4px 10px 5px;
 }
 
 .ch-header h1 {
@@ -76,7 +105,7 @@ html[data-view='chooser'] body {
 }
 
 .ch-question {
-  margin: 2.5rem 0 1.5rem;
+  margin: 2.5rem 0 0.5rem;
   font-size: 1.15rem;
 }
 
@@ -89,6 +118,7 @@ html[data-view='chooser'] body {
 .ch-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 280px));
+  padding-top: 64px; /* room for the formal card's lanyard */
   justify-content: center;
   gap: clamp(32px, 5vw, 76px);
   margin-block: 0;
@@ -190,39 +220,96 @@ html[data-view='chooser'] body {
   text-align: center;
 }
 
-/* ---------- formal: a paper business card ---------- */
-.ch-card-formal {
-  border-radius: 2.5cqw;
+/* ---------- formal: an ID card on a lanyard ---------- */
+.cf-lanyard {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: calc(100% - 9cqw);
+  width: 12cqw;
+  height: 40cqw;
+  transform: translateX(-50%);
   background:
-    radial-gradient(rgba(22, 19, 28, 0.045) 0.6px, transparent 0.9px) 0 0 / 4px 4px,
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 3px),
+    #4c1d95;
+  box-shadow: inset 1.2cqw 0 0 rgba(255, 255, 255, 0.08), inset -1.2cqw 0 0 rgba(0, 0, 0, 0.18);
+  mask-image: linear-gradient(to top, #000 75%, transparent);
+  pointer-events: none;
+}
+
+.cf-lanyard::before {
+  content: 'SKL SKL SKL';
+  position: absolute;
+  inset: 2cqw 0 12cqw;
+  writing-mode: vertical-rl;
+  text-align: center;
+  font-size: 4cqw;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.cf-clip {
+  position: absolute;
+  left: 50%;
+  bottom: -2cqw;
+  width: 15cqw;
+  height: 9cqw;
+  transform: translateX(-50%);
+  border-radius: 1.5cqw 1.5cqw 3cqw 3cqw;
+  background: linear-gradient(#f2f2f6, #a9a9b6);
+  box-shadow: 0 1cqw 2cqw rgba(0, 0, 0, 0.35), inset 0 -1cqw 0 rgba(0, 0, 0, 0.12);
+}
+
+.ch-card-formal {
+  border-radius: 3.5cqw;
+  background:
+    radial-gradient(rgba(22, 19, 28, 0.04) 0.6px, transparent 0.9px) 0 0 / 4px 4px,
     #fbfbfd;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 30px 60px -28px rgba(0, 0, 0, 0.8),
-    0 8px 18px -10px rgba(0, 0, 0, 0.55);
+    0 30px 60px -28px rgba(0, 0, 0, 0.7),
+    0 8px 18px -10px rgba(0, 0, 0, 0.45);
 }
 
 .ch-face-formal {
   display: flex;
   flex-direction: column;
-  padding: 9cqw 9cqw 10cqw;
   color: #16131c;
 }
 
-.cf-mono {
-  font-size: 4.2cqw;
+/* the punched slot the lanyard clip goes through */
+.cf-slot {
+  position: absolute;
+  top: 4.5cqw;
+  left: 50%;
+  width: 18cqw;
+  height: 3cqw;
+  transform: translateX(-50%);
+  border-radius: 2cqw;
+  background: #d9d6e0;
+  box-shadow: inset 0 0.6cqw 0.8cqw rgba(0, 0, 0, 0.25);
+}
+
+.cf-band {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12cqw;
+  padding: 3cqw 8cqw;
+  font-size: 3.6cqw;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  color: #4c1d95;
+  letter-spacing: 0.12em;
+  color: #ffffff;
+  background: #4c1d95;
 }
 
 .cf-photo {
   align-self: center;
-  width: 48cqw;
-  aspect-ratio: 1;
-  margin: auto 0;
+  width: 44cqw;
+  aspect-ratio: 4 / 5;
+  margin-top: 7cqw;
   overflow: hidden;
-  border-radius: 50%;
+  border-radius: 2cqw;
   background: #eeedf3;
   box-shadow: inset 0 0 0 1px #e2dfe9;
 }
@@ -233,36 +320,34 @@ html[data-view='chooser'] body {
   height: 100%;
   object-fit: cover;
   object-position: top center;
-  transform: scale(2.1);
-  transform-origin: 54% 58%;
+  transform: scale(1.55);
+  transform-origin: 54% 18%;
 }
 
-/* a violet foil rule; it catches the light on hover */
-.cf-rule {
-  width: 18cqw;
-  height: 0.9cqw;
-  margin: 0 0 4.5cqw;
-  background: linear-gradient(90deg, #4c1d95, #c4b5fd, #4c1d95) 0 0 / 200% 100%;
-  transition: background-position 0.8s ease;
-}
-
-.ch-pick-formal:hover .cf-rule {
-  background-position: 100% 0;
-}
-
-/* letterpress: a white lip under the type, a faint shadow above */
 .cf-name {
-  font-size: 8.6cqw;
+  margin-top: 5.5cqw;
+  padding: 0 8cqw;
+  text-align: center;
+  font-size: 7.6cqw;
   font-weight: 650;
   letter-spacing: -0.02em;
   line-height: 1.05;
-  text-shadow: 0 1px 0 #ffffff, 0 -1px 0 rgba(22, 19, 28, 0.12);
 }
 
 .cf-role {
-  margin-top: 2cqw;
-  font-size: 4.4cqw;
+  margin-top: 1.5cqw;
+  text-align: center;
+  font-size: 4cqw;
   color: #6b6676;
+}
+
+.cf-barcode {
+  height: 7cqw;
+  margin: auto 14cqw 8cqw;
+  background: repeating-linear-gradient(90deg,
+    #16131c 0 0.6cqw, transparent 0.6cqw 1.2cqw, #16131c 1.2cqw 2.6cqw, transparent 2.6cqw 3.2cqw,
+    #16131c 3.2cqw 3.6cqw, transparent 3.6cqw 4.8cqw);
+  opacity: 0.85;
 }
 
 .ch-pick-formal:hover .ch-card,
@@ -270,101 +355,188 @@ html[data-view='chooser'] body {
   --s: 1.05;
 }
 
-/* ---------- fun: a holographic neon card ---------- */
+/* ---------- fun: an agent card, neon style ---------- */
 .ch-card-fun {
-  background: #0c0614;
+  background: #120a24;
   clip-path: polygon(7cqw 0, 100% 0, 100% calc(100% - 7cqw), calc(100% - 7cqw) 100%, 0 100%, 0 7cqw);
-  filter: drop-shadow(0 26px 34px rgba(0, 0, 0, 0.7));
-}
-
-/* neon tube border + scanlines */
-.ch-face-fun::before {
-  content: '';
-  position: absolute;
-  inset: 4cqw;
-  border: 0.7cqw solid #ff2bd6;
-  border-radius: 1.5cqw;
-  box-shadow: 0 0 2.5cqw #ff2bd6, inset 0 0 2.5cqw rgba(255, 43, 214, 0.55);
+  filter: drop-shadow(0 26px 34px rgba(0, 0, 0, 0.6));
 }
 
 .ch-face-fun::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px);
+  z-index: 4;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 3px);
   pointer-events: none;
+}
+
+/* angled side panels */
+.cv-side {
+  position: absolute;
+  top: 16cqw;
+  bottom: 16cqw;
+  width: 9cqw;
+}
+
+.cv-side-l {
+  left: 0;
+  clip-path: polygon(0 0, 100% 10cqw, 100% calc(100% - 10cqw), 0 100%);
+  background: repeating-linear-gradient(-45deg, rgba(46, 242, 255, 0.85) 0 2cqw, rgba(46, 242, 255, 0.3) 2cqw 4cqw);
+}
+
+.cv-side-r {
+  right: 0;
+  clip-path: polygon(0 10cqw, 100% 0, 100% 100%, 0 calc(100% - 10cqw));
+  background: repeating-linear-gradient(45deg, rgba(255, 43, 214, 0.85) 0 2cqw, rgba(255, 43, 214, 0.3) 2cqw 4cqw);
+}
+
+/* the barcode strip that runs into the top of the panel */
+.cv-strip {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 3;
+  width: 22cqw;
+  height: 17cqw;
+  transform: translateX(-50%);
+  background: repeating-linear-gradient(to bottom, #2ef2ff 0 1.4cqw, rgba(46, 242, 255, 0.25) 1.4cqw 2.8cqw);
+  box-shadow: 0 0 3cqw rgba(46, 242, 255, 0.5);
+}
+
+.cv-panel {
+  position: absolute;
+  top: 13cqw;
+  left: 13cqw;
+  right: 13cqw;
+  bottom: 20cqw;
+  background: #2a1650;
+  border: 0.6cqw solid #2ef2ff;
+  box-shadow: 0 0 3cqw rgba(46, 242, 255, 0.45), inset 0 0 4cqw rgba(192, 64, 255, 0.35);
+}
+
+.cv-vert {
+  position: absolute;
+  left: 1.5cqw;
+  top: 3cqw;
+  bottom: 3cqw;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-align: center;
+  text-transform: uppercase;
+  font-family: 'Anybody', 'Instrument Sans', sans-serif;
+  font-size: 10cqw;
+  font-weight: 800;
+  font-stretch: 112%;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 0.3cqw #2ef2ff;
+}
+
+.cv-tag {
+  position: absolute;
+  top: 3cqw;
+  right: -0.6cqw;
+  padding: 2cqw 1cqw;
+  writing-mode: vertical-rl;
+  font-family: 'Anybody', 'Instrument Sans', sans-serif;
+  font-size: 6.5cqw;
+  font-weight: 800;
+  font-stretch: 120%;
+  color: #120a24;
+  background: #2ef2ff;
+}
+
+.cv-window {
+  position: absolute;
+  top: 6cqw;
+  left: 15cqw;
+  right: 12cqw;
+  height: 50cqw;
+  overflow: hidden;
+  background: linear-gradient(160deg, #ff2bd6, #c040ff 48%, #2ef2ff);
+  border: 0.6cqw solid #fdf4ff;
+}
+
+.cv-window img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transform: scale(1.35);
+  transform-origin: 54% 12%;
+  filter: drop-shadow(0 0 1.5cqw rgba(46, 242, 255, 0.8)) contrast(1.05);
+}
+
+.cv-tick {
+  position: absolute;
+  width: 5cqw;
+  height: 5cqw;
+  border-color: #fdf4ff;
+  border-style: solid;
+}
+
+.cv-tick-a { top: 2cqw; left: 2cqw; border-width: 0.5cqw 0 0 0.5cqw; }
+.cv-tick-b { bottom: 2cqw; right: 2cqw; border-width: 0 0.5cqw 0.5cqw 0; }
+
+.cv-hud {
+  position: absolute;
+  left: 15cqw;
+  right: 4cqw;
+  bottom: 3.5cqw;
+  display: flex;
+  align-items: center;
+  gap: 3cqw;
+}
+
+.cv-cross {
+  display: grid;
+  place-items: center;
+  width: 13cqw;
+  height: 13cqw;
+  border: 0.4cqw solid #2ef2ff;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2cqw #2a1650, inset 0 0 0 2.4cqw rgba(46, 242, 255, 0.6);
+}
+
+.cv-cross span {
+  font-size: 2.2cqw;
+  font-weight: 700;
+  color: #2ef2ff;
+}
+
+.cv-lines {
+  flex: 1;
+  height: 4cqw;
+  background: repeating-linear-gradient(90deg, rgba(253, 244, 255, 0.7) 0 0.4cqw, transparent 0.4cqw 1.4cqw);
+}
+
+.cv-num {
+  font-family: 'Anybody', 'Instrument Sans', sans-serif;
+  font-size: 9cqw;
+  font-weight: 800;
+  line-height: 1;
+  color: #fdf4ff;
+}
+
+.cv-mark {
+  width: 6cqw;
+  height: 6cqw;
+  border: 0.5cqw solid #ff2bd6;
+  transform: rotate(45deg) scale(0.75);
 }
 
 /* rainbow sheen that slides as the card tilts */
 .cn-holo {
   position: absolute;
   inset: 0;
-  background: linear-gradient(115deg, transparent 20%, rgba(46, 242, 255, 0.2) 36%, rgba(255, 43, 214, 0.2) 50%, rgba(255, 214, 90, 0.16) 62%, transparent 78%);
+  z-index: 3;
+  background: linear-gradient(115deg, transparent 20%, rgba(46, 242, 255, 0.18) 36%, rgba(255, 43, 214, 0.18) 50%, rgba(255, 214, 90, 0.14) 62%, transparent 78%);
   background-size: 220% 220%;
   background-position: var(--gx, 30%) var(--gy, 30%);
   mix-blend-mode: screen;
-  transition: background-position 0.2s;
-}
-
-.cn-sign {
-  position: absolute;
-  top: 12cqw;
-  right: 11cqw;
-  writing-mode: vertical-rl;
-  font-family: 'Hiragino Sans', 'Yu Gothic', 'Noto Sans JP', sans-serif;
-  font-size: 8cqw;
-  font-weight: 300;
-  color: transparent;
-  -webkit-text-stroke: 0.3cqw #2ef2ff;
-  filter: drop-shadow(0 0 1.2cqw #2ef2ff);
-}
-
-.cn-word {
-  position: absolute;
-  left: 10cqw;
-  bottom: 27cqw;
-  font-family: 'Anybody', 'Instrument Sans', sans-serif;
-  font-size: 15cqw;
-  font-weight: 800;
-  font-stretch: 118%;
-  line-height: 1;
-  color: #fdf4ff;
-  text-shadow: -0.8cqw 0 rgba(46, 242, 255, 0.7), 0.8cqw 0 rgba(255, 43, 214, 0.75), 0 0 5cqw rgba(192, 64, 255, 0.55);
-}
-
-.cn-word::before,
-.cn-word::after {
-  content: attr(data-text);
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  text-shadow: none;
-  mix-blend-mode: screen;
   pointer-events: none;
-}
-
-.cn-word::before { color: #2ef2ff; }
-.cn-word::after { color: #ff2bd6; }
-
-.cn-bar {
-  position: absolute;
-  height: 1.2cqw;
-  box-shadow: 0 0 2.5cqw currentColor;
-}
-
-.cn-bar-a { top: 22cqw; left: 10cqw; width: 34cqw; background: #ff2bd6; color: #ff2bd6; }
-.cn-bar-b { bottom: 21cqw; right: 12cqw; width: 22cqw; background: #2ef2ff; color: #2ef2ff; }
-
-.cn-chip {
-  position: absolute;
-  left: 10cqw;
-  bottom: 11cqw;
-  padding: 1.2cqw 2.4cqw;
-  font-size: 3cqw;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: #2ef2ff;
-  border: 0.4cqw solid rgba(46, 242, 255, 0.7);
 }
 
 /* hover: a bad signal. Calm, then short irregular bursts */
@@ -382,29 +554,17 @@ html[data-view='chooser'] body {
   74% { translate: 2px 0; }
 }
 
-.ch-pick-fun:hover .cn-word::before { animation: chSliceA 2.4s steps(1) infinite; }
-.ch-pick-fun:hover .cn-word::after { animation: chSliceB 2.4s steps(1) infinite; }
-.ch-pick-fun:hover .cn-bar { animation: chBarSkip 2.4s steps(1) infinite; }
+.ch-pick-fun:hover .cv-window img { animation: chRgb 2.4s steps(1) infinite; }
+.ch-pick-fun:hover .cv-vert,
+.ch-pick-fun:hover .cv-strip { animation: chBarSkip 2.4s steps(1) infinite; }
 
-@keyframes chSliceA {
-  0%, 7%, 37%, 45%, 70%, 77%, 100% { opacity: 0; transform: none; clip-path: inset(0 0 100% 0); }
-  1% { opacity: 1; transform: translateX(-6px); clip-path: inset(12% 0 64% 0); }
-  2% { opacity: 1; transform: translateX(4px); clip-path: inset(58% 0 20% 0); }
-  4% { opacity: 1; transform: translateX(-3px); clip-path: inset(30% 0 44% 0); }
-  38% { opacity: 1; transform: translateX(5px); clip-path: inset(70% 0 8% 0); }
-  41% { opacity: 1; transform: translateX(-2px); clip-path: inset(6% 0 80% 0); }
-  71% { opacity: 1; transform: translateX(-8px); clip-path: inset(40% 0 38% 0); }
-  74% { opacity: 1; transform: translateX(3px); clip-path: inset(18% 0 66% 0); }
-}
-
-@keyframes chSliceB {
-  0%, 7%, 37%, 45%, 70%, 77%, 100% { opacity: 0; transform: none; clip-path: inset(0 0 100% 0); }
-  1% { opacity: 1; transform: translateX(5px); clip-path: inset(62% 0 14% 0); }
-  3% { opacity: 1; transform: translateX(-4px); clip-path: inset(22% 0 60% 0); }
-  5% { opacity: 1; transform: translateX(3px); clip-path: inset(80% 0 4% 0); }
-  39% { opacity: 1; transform: translateX(-6px); clip-path: inset(34% 0 48% 0); }
-  72% { opacity: 1; transform: translateX(7px); clip-path: inset(8% 0 76% 0); }
-  75% { opacity: 1; transform: translateX(-3px); clip-path: inset(52% 0 30% 0); }
+/* the portrait splits into colour channels during each burst */
+@keyframes chRgb {
+  0%, 6%, 38%, 44%, 71%, 76%, 100% { translate: 0 0; filter: drop-shadow(0 0 1.5cqw rgba(46, 242, 255, 0.8)) contrast(1.05); }
+  1% { translate: -1.5cqw 0; filter: drop-shadow(-1.2cqw 0 rgba(46, 242, 255, 0.9)) drop-shadow(1.2cqw 0 rgba(255, 43, 214, 0.9)); }
+  3% { translate: 1cqw 0; }
+  39% { translate: 0.8cqw 0; filter: drop-shadow(1cqw 0 rgba(46, 242, 255, 0.9)) drop-shadow(-1cqw 0 rgba(255, 43, 214, 0.9)); }
+  72% { translate: -1cqw 0; filter: drop-shadow(-1.4cqw 0 rgba(46, 242, 255, 0.9)) drop-shadow(1.4cqw 0 rgba(255, 43, 214, 0.9)) hue-rotate(20deg); }
 }
 
 @keyframes chBarSkip {
@@ -415,7 +575,7 @@ html[data-view='chooser'] body {
   72% { transform: translateX(-22px) scaleX(1.3); }
 }
 
-/* ---------- journey: an 8-bit game cartridge ---------- */
+/* ---------- journey: an 8-bit game cartridge with a living label ---------- */
 .ch-card-journey {
   background: #9a9aa8;
   clip-path: polygon(0 5cqw, 5cqw 0, calc(100% - 5cqw) 0, 100% 5cqw, 100% 100%, 0 100%);
@@ -423,7 +583,7 @@ html[data-view='chooser'] body {
     inset 2.4cqw 0 0 #b2b2bf,
     inset -2.4cqw 0 0 #7d7d8d,
     inset 0 -3.5cqw 0 #6e6e7e;
-  filter: drop-shadow(0 26px 30px rgba(0, 0, 0, 0.65));
+  filter: drop-shadow(0 26px 30px rgba(0, 0, 0, 0.55));
 }
 
 .cc-grip {
@@ -444,15 +604,19 @@ html[data-view='chooser'] body {
   overflow: hidden;
   background: #5aa8f0;
   border: 1.4cqw solid #1a1018;
+}
+
+.cc-label img {
+  position: absolute;
   image-rendering: pixelated;
 }
 
 .cc-title {
   position: absolute;
-  top: 6cqw;
+  top: 5cqw;
   left: 0;
   right: 0;
-  z-index: 1;
+  z-index: 2;
   text-align: center;
   font-family: 'Press Start 2P', monospace;
   font-size: 6.6cqw;
@@ -460,12 +624,69 @@ html[data-view='chooser'] body {
   text-shadow: 0.8cqw 0.8cqw 0 #1a1018;
 }
 
-.cc-cloud {
+.cc-cloud-a { top: 17cqw; left: 4cqw; width: 24cqw; }
+.cc-cloud-b { top: 27cqw; right: 3cqw; width: 17cqw; opacity: 0.9; }
+
+.cc-palm {
+  bottom: 12cqw;
+  width: 22cqw;
+  transform-origin: 50% 100%;
+}
+
+.cc-palm-a { left: -2cqw; }
+.cc-palm-b { right: 30cqw; width: 18cqw; bottom: 12cqw; }
+
+.cc-bush {
+  bottom: 12cqw;
+  left: 16cqw;
+  width: 15cqw;
+  transform-origin: 50% 100%;
+}
+
+.cc-chest {
   position: absolute;
-  top: 19cqw;
-  left: 6cqw;
-  width: 28cqw;
-  image-rendering: pixelated;
+  right: 6cqw;
+  bottom: 12.5cqw;
+  width: 14cqw;
+  height: 10.5cqw;
+}
+
+.cc-chest img {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cc-chest-open,
+.cc-coin {
+  opacity: 0;
+}
+
+.cc-coin {
+  left: 50%;
+  bottom: 70%;
+  width: 7cqw !important;
+  height: 7cqw !important;
+  inset: auto auto 70% 50% !important;
+  translate: -50% 0;
+}
+
+.cc-hero {
+  position: absolute;
+  left: 30cqw;
+  bottom: 13cqw;
+  width: 13cqw;
+  height: 19.5cqw;
+}
+
+.cc-hero img {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cc-hero-jump {
+  opacity: 0;
 }
 
 .cc-ground {
@@ -476,39 +697,6 @@ html[data-view='chooser'] body {
   height: 13cqw;
   background: #b8682a;
   border-top: 2.6cqw solid #3fae3a;
-}
-
-.cc-sam,
-.cc-hero {
-  position: absolute;
-  bottom: 13cqw;
-  width: 14cqw;
-  height: 21cqw;
-  image-rendering: pixelated;
-}
-
-.cc-sam {
-  right: 14cqw;
-  transform: scaleX(-1);
-}
-
-.cc-hero {
-  left: 14cqw;
-  background: var(--idle) 0 0 / 14cqw 21cqw no-repeat;
-}
-
-.ch-pick-journey:hover .cc-hero,
-.ch-pick-journey:focus-visible .cc-hero {
-  background: var(--walk) 0 0 / 56cqw 21cqw no-repeat;
-  animation: chWalkFrames 0.4s steps(4) infinite, chWalkMove 1.6s steps(16) forwards;
-}
-
-@keyframes chWalkFrames {
-  to { background-position: -56cqw 0; }
-}
-
-@keyframes chWalkMove {
-  to { transform: translateX(16cqw); }
 }
 
 .cc-arrow {
@@ -522,15 +710,64 @@ html[data-view='chooser'] body {
   text-shadow: 0 1px 0 #b2b2bf;
 }
 
-/* twigs that sprout from behind the cartridge */
-.ch-twigs {
-  position: absolute;
-  pointer-events: none;
-  image-rendering: pixelated;
+/* hover: the hero hops, the wind picks up, the chest pops a coin */
+.ch-pick-journey:hover .cc-hero,
+.ch-pick-journey:focus-visible .cc-hero { animation: ccJump 1s steps(10) infinite; }
+.ch-pick-journey:hover .cc-hero-idle,
+.ch-pick-journey:focus-visible .cc-hero-idle { animation: ccOnGround 1s steps(1) infinite; }
+.ch-pick-journey:hover .cc-hero-jump,
+.ch-pick-journey:focus-visible .cc-hero-jump { animation: ccInAir 1s steps(1) infinite; }
+
+@keyframes ccJump {
+  0%, 88%, 100% { transform: translateY(0); }
+  20% { transform: translateY(-11cqw); }
+  40% { transform: translateY(-15cqw); }
+  60% { transform: translateY(-11cqw); }
+  78% { transform: translateY(-3cqw); }
 }
 
-.ch-twigs-back { z-index: 0; }
-.ch-twigs-front { z-index: 2; }
+@keyframes ccOnGround {
+  0%, 88%, 100% { opacity: 1; }
+  6% { opacity: 0; }
+}
+
+@keyframes ccInAir {
+  0%, 88%, 100% { opacity: 0; }
+  6% { opacity: 1; }
+}
+
+.ch-pick-journey:hover .cc-cloud-a { animation: ccWindA 2.2s ease-in-out infinite alternate; }
+.ch-pick-journey:hover .cc-cloud-b { animation: ccWindB 1.7s ease-in-out infinite alternate; }
+
+@keyframes ccWindA {
+  to { transform: translateX(9cqw); }
+}
+
+@keyframes ccWindB {
+  to { transform: translateX(-7cqw); }
+}
+
+.ch-pick-journey:hover .cc-palm,
+.ch-pick-journey:hover .cc-bush { animation: ccSway 0.8s steps(4) infinite alternate; }
+.ch-pick-journey:hover .cc-palm-b { animation-duration: 0.95s; animation-delay: -0.3s; }
+
+@keyframes ccSway {
+  from { transform: rotate(-3deg) skewX(2deg); }
+  to { transform: rotate(5deg) skewX(-4deg); }
+}
+
+.ch-pick-journey:hover .cc-chest-closed { animation: ccHide 0.1s steps(1) 0.35s forwards; }
+.ch-pick-journey:hover .cc-chest-open { animation: ccShow 0.1s steps(1) 0.35s forwards; }
+.ch-pick-journey:hover .cc-coin { animation: ccCoin 1s steps(8) 0.4s forwards; }
+
+@keyframes ccHide { to { opacity: 0; } }
+@keyframes ccShow { to { opacity: 1; } }
+
+@keyframes ccCoin {
+  0% { opacity: 1; transform: translateY(0); }
+  60% { opacity: 1; transform: translateY(-14cqw); }
+  100% { opacity: 1; transform: translateY(-11cqw); }
+}
 
 /* ---------- docked: the cards you didn't pick, small along the bottom ---------- */
 .ch-cards.is-docked {

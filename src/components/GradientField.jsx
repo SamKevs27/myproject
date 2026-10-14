@@ -2,21 +2,23 @@ import { useEffect, useRef } from 'react'
 import { prefersReducedMotion } from '../hooks/useInView'
 
 const SCALE = 10 // the canvas is 1/10th of the screen; stretching it blurs the blobs together
-const BASE = '#e8957e'
+const BASE = '#c4c4c4'
 
-// Big soft colour blobs, each drifting on its own slow loop.
-// [r, g, b], radius (share of the longer screen side), path centre, path size, speeds, phase
+// Soft monochrome blobs, each drifting on its own loop. The first is the big
+// dark circle that roams the whole screen; the rest are white and greys.
+// [r, g, b], radius (share of the longer screen side), path centre, path size, speeds, phase, alpha
 const BLOBS = [
-  { c: [247, 200, 106], r: 0.55, cx: 0.08, cy: 0.12, ax: 0.12, ay: 0.1, sx: 0.21, sy: 0.15, p: 0 }, // golden yellow
-  { c: [245, 214, 186], r: 0.6, cx: 0.32, cy: 0.85, ax: 0.18, ay: 0.12, sx: 0.15, sy: 0.24, p: 1.7 }, // peach cream
-  { c: [227, 122, 99], r: 0.55, cx: 0.5, cy: 0.18, ax: 0.2, ay: 0.14, sx: 0.18, sy: 0.21, p: 3.1 }, // coral
-  { c: [205, 105, 112], r: 0.5, cx: 0.85, cy: 0.2, ax: 0.12, ay: 0.16, sx: 0.24, sy: 0.15, p: 4.4 }, // rose
-  { c: [232, 152, 132], r: 0.5, cx: 0.8, cy: 0.85, ax: 0.15, ay: 0.1, sx: 0.15, sy: 0.18, p: 2.4 }, // salmon
+  { c: [18, 18, 18], r: 0.42, cx: 0.5, cy: 0.5, ax: 0.38, ay: 0.32, sx: 0.23, sy: 0.31, p: 0, a: 0.9 }, // the big dark circle
+  { c: [255, 255, 255], r: 0.5, cx: 0.15, cy: 0.2, ax: 0.14, ay: 0.12, sx: 0.18, sy: 0.14, p: 1.7, a: 0.95 },
+  { c: [235, 235, 235], r: 0.55, cx: 0.85, cy: 0.8, ax: 0.14, ay: 0.12, sx: 0.15, sy: 0.21, p: 3.1, a: 0.9 },
+  { c: [120, 120, 120], r: 0.4, cx: 0.8, cy: 0.15, ax: 0.12, ay: 0.14, sx: 0.24, sy: 0.17, p: 4.4, a: 0.7 },
+  { c: [255, 255, 255], r: 0.35, cx: 0.4, cy: 0.9, ax: 0.2, ay: 0.08, sx: 0.2, sy: 0.16, p: 2.4, a: 0.8 },
 ]
 
 /**
- * A slowly moving warm gradient: soft colour blobs drift and melt into each
- * other. One blob leans gently toward the cursor.
+ * A slowly moving monochrome gradient: a big dark circle roams the screen
+ * among soft white and grey blobs, all melted together by a heavy blur.
+ * The dark circle leans gently toward the cursor.
  */
 export default function GradientField({ className = '' }) {
   const canvasRef = useRef(null)
@@ -48,16 +50,16 @@ export default function GradientField({ className = '' }) {
       BLOBS.forEach((b, i) => {
         let x = (b.cx + Math.sin(t * b.sx + b.p) * b.ax) * w
         let y = (b.cy + Math.cos(t * b.sy + b.p) * b.ay) * h
-        if (i === 2) {
-          // the coral blob leans toward the cursor
+        if (i === 0) {
+          // the big circle leans toward the cursor
           x += (pointer.x * w - x) * 0.35
           y += (pointer.y * h - y) * 0.35
         }
         const r = b.r * size * (1 + Math.sin(t * 0.5 + b.p) * 0.1)
         const g = ctx.createRadialGradient(x, y, 0, x, y, r)
         const [cr, cg, cb] = b.c
-        g.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, 0.95)`)
-        g.addColorStop(0.55, `rgba(${cr}, ${cg}, ${cb}, 0.45)`)
+        g.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, ${b.a})`)
+        g.addColorStop(0.6, `rgba(${cr}, ${cg}, ${cb}, ${b.a * 0.5})`)
         g.addColorStop(1, `rgba(${cr}, ${cg}, ${cb}, 0)`)
         ctx.fillStyle = g
         ctx.fillRect(0, 0, w, h)

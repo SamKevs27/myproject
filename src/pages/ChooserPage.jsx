@@ -8,68 +8,107 @@ import { FORMAL_PATH, FUN_PATH, JOURNEY_PATH } from '../lib/routes'
 import { switchView } from '../lib/switchView'
 import GradientField from '../components/GradientField'
 import { FormalStage, FunStage, JourneyStage } from '../chooser/Stages'
-import Twigs from '../chooser/Twigs'
 import { spriteCanvas, spriteDataUrl } from '../journey/renderSprite'
-import { HERO, SAM, characterFrames } from '../journey/sprites/character'
-import { CLOUD } from '../journey/sprites/scenery'
+import { HERO, characterFrames } from '../journey/sprites/character'
+import { BUSH, CHEST_CLOSED, CHEST_OPEN, CLOUD, COIN, PALM_FRONDS } from '../journey/sprites/scenery'
+import { PALETTE } from '../journey/sprites/palette'
 import './ChooserPage.css'
-
-// The hero's 4 walk frames side by side, for a CSS steps() walk cycle.
-function walkSheet() {
-  const frames = characterFrames(HERO).walk
-  const canvas = document.createElement('canvas')
-  canvas.width = 16 * frames.length
-  canvas.height = 24
-  const ctx = canvas.getContext('2d')
-  frames.forEach((f, i) => ctx.drawImage(spriteCanvas(f), i * 16, 0))
-  return canvas.toDataURL('image/png')
-}
 
 /* ---- card faces: each one an object from its own world ---- */
 
-// Formal: a paper business card with letterpress type and a foil rule.
+// Formal: an ID card on a lanyard.
 function FormalFace({ name, role }) {
   return (
     <div className="ch-face ch-face-formal" aria-hidden="true">
-      <span className="cf-mono">SKL</span>
+      <span className="cf-slot" />
+      <span className="cf-band"><span>SKL</span><span>Portfolio</span></span>
       <span className="cf-photo"><img src={portrait} alt="" /></span>
-      <span className="cf-rule" />
       <span className="cf-name">{name}</span>
       <span className="cf-role">{role}</span>
+      <span className="cf-barcode" />
     </div>
   )
 }
 
-// Fun: a holographic neon card behind glass.
+// Fun: an agent card in the neon style.
 function FunFace({ word }) {
   return (
     <div className="ch-face ch-face-fun" aria-hidden="true">
+      <span className="cv-side cv-side-l" />
+      <span className="cv-side cv-side-r" />
+      <span className="cv-strip" />
+      <span className="cv-panel">
+        <span className="cv-vert">{word}</span>
+        <span className="cv-tag">SKL</span>
+        <span className="cv-window">
+          <img src={portrait} alt="" />
+          <span className="cv-tick cv-tick-a" />
+          <span className="cv-tick cv-tick-b" />
+        </span>
+        <span className="cv-hud">
+          <span className="cv-cross"><span>01_SK</span></span>
+          <span className="cv-lines" />
+          <span className="cv-num">26</span>
+          <span className="cv-mark" />
+        </span>
+      </span>
       <span className="cn-holo" />
-      <span className="cn-sign">サミュエル</span>
-      <span className="cn-word" data-text={word}>{word}</span>
-      <span className="cn-bar cn-bar-a" />
-      <span className="cn-bar cn-bar-b" />
-      <span className="cn-chip">NEON EDITION</span>
     </div>
   )
 }
 
-// Journey: an 8-bit game cartridge with a pixel-art label.
+// A small pixel palm (trunk + fronds) drawn once.
+function palmImage() {
+  const fronds = spriteCanvas(PALM_FRONDS)
+  const canvas = document.createElement('canvas')
+  canvas.width = fronds.width
+  canvas.height = 46
+  const ctx = canvas.getContext('2d')
+  for (let y = 0; y < 34; y += 3) {
+    const x = 14 + Math.floor((y / 34) ** 2 * 3)
+    ctx.fillStyle = PALETTE.outline
+    ctx.fillRect(x - 1, 46 - y - 3, 6, 3)
+    ctx.fillStyle = (y / 3) % 2 ? PALETTE.brown2 : PALETTE.brown1
+    ctx.fillRect(x, 46 - y - 3, 4, 3)
+  }
+  ctx.drawImage(fronds, 0, 4)
+  return canvas.toDataURL('image/png')
+}
+
+// Journey: an 8-bit cartridge; the label is a tiny level that comes alive on hover.
 function JourneyFace() {
-  const art = useMemo(() => ({
-    hero: spriteDataUrl(characterFrames(HERO).idle),
-    walk: walkSheet(),
-    sam: spriteDataUrl(characterFrames(SAM).idle),
-    cloud: spriteDataUrl(CLOUD),
-  }), [])
+  const art = useMemo(() => {
+    const frames = characterFrames(HERO)
+    return {
+      idle: spriteDataUrl(frames.idle),
+      jump: spriteDataUrl(frames.jump),
+      cloud: spriteDataUrl(CLOUD),
+      palm: palmImage(),
+      bush: spriteDataUrl(BUSH),
+      chest: spriteDataUrl(CHEST_CLOSED),
+      chestOpen: spriteDataUrl(CHEST_OPEN),
+      coin: spriteDataUrl(COIN),
+    }
+  }, [])
   return (
     <div className="ch-face ch-face-journey" aria-hidden="true">
       <span className="cc-grip" />
       <span className="cc-label">
         <span className="cc-title">JOURNEY</span>
-        <img className="cc-cloud" src={art.cloud} alt="" />
-        <img className="cc-sam" src={art.sam} alt="" />
-        <span className="cc-hero" style={{ '--idle': `url(${art.hero})`, '--walk': `url(${art.walk})` }} />
+        <img className="cc-cloud cc-cloud-a" src={art.cloud} alt="" />
+        <img className="cc-cloud cc-cloud-b" src={art.cloud} alt="" />
+        <img className="cc-palm cc-palm-a" src={art.palm} alt="" />
+        <img className="cc-palm cc-palm-b" src={art.palm} alt="" />
+        <img className="cc-bush" src={art.bush} alt="" />
+        <span className="cc-chest">
+          <img className="cc-chest-closed" src={art.chest} alt="" />
+          <img className="cc-chest-open" src={art.chestOpen} alt="" />
+          <img className="cc-coin" src={art.coin} alt="" />
+        </span>
+        <span className="cc-hero">
+          <img className="cc-hero-idle" src={art.idle} alt="" />
+          <img className="cc-hero-jump" src={art.jump} alt="" />
+        </span>
         <span className="cc-ground" />
       </span>
       <span className="cc-arrow">▼</span>
@@ -122,7 +161,6 @@ export default function ChooserPage() {
 
   const [chosen, setChosen] = useState(null)
   const [layers, setLayers] = useState([])
-  const [hovered, setHovered] = useState(null)
   const itemRefs = useRef({})
   const cardRefs = useRef({})
   const flipFrom = useRef(null)
@@ -193,7 +231,6 @@ export default function ChooserPage() {
     layerKey.current += 1
     setLayers((prev) => [...prev, { key: layerKey.current, id: view.id, rect }])
     setChosen(view.id)
-    setHovered(null)
   }
 
   // once the newest world has fully grown, drop the ones underneath it
@@ -264,15 +301,12 @@ export default function ChooserPage() {
                   e.preventDefault()
                   choose(view)
                 }}
-                onPointerEnter={() => setHovered(view.id)}
-                onPointerLeave={(e) => { setHovered(null); resetTilt(e) }}
+                onPointerLeave={resetTilt}
                 onPointerMove={tilt}
-                onFocus={() => setHovered(view.id)}
-                onBlur={() => setHovered(null)}
                 aria-label={`${view.title}: ${view.text}`}
               >
                 <span className="ch-object">
-                  {view.id === 'journey' && <Twigs active={hovered === 'journey'} />}
+                  {view.id === 'formal' && <span className="cf-lanyard" aria-hidden="true"><span className="cf-clip" /></span>}
                   <span ref={(el) => { cardRefs.current[view.id] = el }} className={`ch-card ch-card-${view.id}`}>
                     {view.face}
                     <span className="ch-glare" />
